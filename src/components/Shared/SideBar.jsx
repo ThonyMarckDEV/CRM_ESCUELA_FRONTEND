@@ -217,40 +217,21 @@ const Sidebar = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     
     const location = useLocation();
-    
-    // Obtener Rol
     const { role: userRole, logout } = useAuth();
 
     const handleLogout = () => { logout(); setShowConfirm(false); };
     
-    // =======================================================================
     // LÓGICA DE FILTRADO
-    // Creamos el menú específico para el usuario actual dinámicamente
-    // =======================================================================
     const userMenu = useMemo(() => {
         if (!userRole) return [];
-
         return MASTER_MENU.reduce((acc, item) => {
-            // 1. Verificar si el rol tiene permiso para la SECCIÓN principal
             if (!item.allowedRoles.includes(userRole)) return acc;
-
-            // 2. Si tiene submenús, filtramos también los hijos
             if (item.subs) {
-                const visibleSubs = item.subs.filter(sub => 
-                    // Si no tiene allowedRoles definido, asume que hereda del padre,
-                    // si lo tiene, verifica que el usuario esté incluido.
-                    !sub.allowedRoles || sub.allowedRoles.includes(userRole)
-                );
-
-                // Solo mostramos la sección si tiene al menos un submenú visible
-                if (visibleSubs.length > 0) {
-                    acc.push({ ...item, subs: visibleSubs });
-                }
+                const visibleSubs = item.subs.filter(sub => !sub.allowedRoles || sub.allowedRoles.includes(userRole));
+                if (visibleSubs.length > 0) acc.push({ ...item, subs: visibleSubs });
             } else {
-                // Es un link directo (ej: Dashboard)
                 acc.push(item);
             }
-
             return acc;
         }, []);
     }, [userRole]);
@@ -265,7 +246,7 @@ const Sidebar = () => {
 
     const isSectionActive = useCallback((item) => {
         if (item.subs) return item.subs.some(sub => location.pathname.startsWith(sub.link));
-        if (item.link) return location.pathname === item.link; // Dashboard exacto
+        if (item.link) return location.pathname === item.link; 
         return false;
     }, [location.pathname]);
     
@@ -285,12 +266,19 @@ const Sidebar = () => {
                 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
 
-            {/* Botón Móvil */}
+            {/* 1. Botón Móvil */}
             <button className="md:hidden fixed top-4 left-4 z-50 p-2 bg-black text-white rounded-md shadow-lg" onClick={() => setIsOpen(!isOpen)}>
                 <Bars3Icon className="h-6 w-6" />
             </button>
 
-            {/* Sidebar Container */}
+            {/* 2. Overlay Móvil */}
+            <div 
+                className={`fixed inset-0 z-30 bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:hidden
+                    ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+                onClick={() => setIsOpen(false)}
+            />
+
+            {/* 3. Sidebar Container */}
             <div
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
@@ -298,17 +286,18 @@ const Sidebar = () => {
                     ${isOpen ? 'translate-x-0 w-72' : '-translate-x-full'} 
                     ${sidebarWidth} md:translate-x-0`}
             >
-                {/* 1. HEADER */}
+                {/* HEADER */}
                 <div className={`flex items-center justify-center flex-shrink-0 border-b border-gray-100 transition-all duration-300 ${isHovered ? 'h-24' : 'h-20'}`}>
                     <div className="bg-black text-white flex items-center justify-center font-bold rounded-lg w-10 h-10 text-xl transition-all duration-300">
                         S
                     </div>
-                    <div className={`ml-3 font-bold text-lg tracking-tight overflow-hidden transition-all duration-300 whitespace-nowrap ${!isHovered ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                    <div className={`ml-3 font-bold text-lg tracking-tight overflow-hidden transition-all duration-300 whitespace-nowrap 
+                        w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0' : 'md:w-auto md:opacity-100'}`}>
                         SISTEMA<span className="text-gray-400">ADMIN</span>
                     </div>
                 </div>
 
-                {/* 2. BODY (Renderizando userMenu filtrado) */}
+                {/* BODY */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 space-y-2 hide-scrollbar px-3">
                     {userMenu.map((item, index) => {
                         const isActive = isSectionActive(item); 
@@ -323,45 +312,53 @@ const Sidebar = () => {
                             <div key={index}>
                                 {item.subs ? (
                                     <>
+                                        {/* Botón Principal del Menú */}
                                         <button 
                                             onClick={() => toggleSection(item.section)} 
                                             className={`${itemBaseClasses} ${isActive && !isHovered ? 'bg-gray-100 text-black' : (isActive ? activeClasses : inactiveClasses)}`}
                                             title={!isHovered ? item.section : ''}
                                         >
                                             <IconComponent className="h-6 w-6 flex-shrink-0" /> 
-                                            <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${!isHovered ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                                            
+                                            {/* Texto del Menú */}
+                                            <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 
+                                                w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0' : 'md:w-auto md:opacity-100'}`}>
                                                 {item.section}
                                             </span>
-                                            {(isHovered || window.innerWidth < 768) && (
-                                                <ChevronDownIcon className={`ml-auto h-4 w-4 transition-transform duration-300 ${isSubOpen ? 'rotate-180' : ''}`}/>
-                                            )}
+
+                                            <ChevronDownIcon 
+                                                className={`ml-auto h-4 w-4 transition-transform duration-300 
+                                                ${isSubOpen ? 'rotate-180' : ''}
+                                                ${!isHovered ? 'md:hidden' : ''}
+                                            `} />
                                         </button>
 
+                                        {/* Contenedor de Submenús */}
                                         <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isSubOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
-                                            {(isHovered || window.innerWidth < 768) && (
-                                                <ul className="ml-4 pl-4 border-l border-gray-200 space-y-1">
-                                                    {item.subs.map((sub, idx) => (
-                                                        <li key={idx}>
-                                                            <Link to={sub.link} onClick={() => setIsOpen(false)} 
-                                                                className={`block py-2 px-3 rounded-md text-sm font-medium transition-colors
-                                                                ${location.pathname.startsWith(sub.link) 
-                                                                    ? 'text-black bg-gray-50' 
-                                                                    : 'text-gray-500 hover:text-black hover:bg-gray-50'}`}>
-                                                                {sub.name}
-                                                            </Link>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
+                                            <ul className="ml-4 pl-4 border-l border-gray-200 space-y-1">
+                                                {item.subs.map((sub, idx) => (
+                                                    <li key={idx}>
+                                                        <Link to={sub.link} onClick={() => setIsOpen(false)} 
+                                                            className={`block py-2 px-3 rounded-md text-sm font-medium transition-colors
+                                                            ${location.pathname.startsWith(sub.link) 
+                                                                ? 'text-black bg-gray-50' 
+                                                                : 'text-gray-500 hover:text-black hover:bg-gray-50'}`}>
+                                                            {sub.name}
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         </div>
                                     </>
                                 ) : (
+                                    /* Ítem sin submenú (Link directo) */
                                     <Link to={item.link} onClick={() => setIsOpen(false)} 
                                         className={`${itemBaseClasses} ${isActive ? activeClasses : inactiveClasses}`}
                                         title={!isHovered ? item.section : ''}
                                     >
                                         <IconComponent className="h-6 w-6 flex-shrink-0" />
-                                        <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${!isHovered ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                                        <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300
+                                            w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0' : 'md:w-auto md:opacity-100'}`}>
                                             {item.section}
                                         </span>
                                     </Link>
@@ -371,13 +368,14 @@ const Sidebar = () => {
                     })}
                 </div>
 
-                {/* 3. FOOTER */}
+                {/* FOOTER */}
                 <div className="p-4 border-t border-gray-100 flex-shrink-0">
                     <button onClick={() => setShowConfirm(true)} 
-                        className={`flex items-center w-full p-3 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group ${!isHovered ? 'justify-center' : ''}`} 
+                        className={`flex items-center w-full p-3 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group ${!isHovered ? 'md:justify-center' : ''}`} 
                         title="Cerrar Sesión">
                         <ArrowRightOnRectangleIcon className="h-6 w-6 flex-shrink-0" />
-                        <span className={`ml-3 whitespace-nowrap overflow-hidden transition-all duration-300 font-medium ${!isHovered ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                        <span className={`ml-3 whitespace-nowrap overflow-hidden transition-all duration-300 font-medium 
+                            w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0' : 'md:w-auto md:opacity-100'}`}>
                             Salir
                         </span>
                     </button>
