@@ -288,12 +288,10 @@ const Sidebar = () => {
             >
                 {/* HEADER */}
                 <div className={`flex items-center justify-center flex-shrink-0 border-b border-gray-100 transition-all duration-300 ${isHovered ? 'h-24' : 'h-20'}`}>
-                    <div className="bg-black text-white flex items-center justify-center font-bold rounded-lg w-10 h-10 text-xl transition-all duration-300">
-                        S
-                    </div>
-                    <div className={`ml-3 font-bold text-lg tracking-tight overflow-hidden transition-all duration-300 whitespace-nowrap 
-                        w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0' : 'md:w-auto md:opacity-100'}`}>
-                        SISTEMA<span className="text-gray-400">ADMIN</span>
+                    {/* CORRECCIÓN TEXTO HEADER: Se oculta completamente el margen si no hay hover */}
+                    <div className={`font-bold text-lg tracking-tight overflow-hidden transition-all duration-300 whitespace-nowrap 
+                        w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0 md:ml-0' : 'md:w-auto md:opacity-100 ml-3'}`}>
+                        CRM - <span className="text-gray-400">ESCUELA</span>
                     </div>
                 </div>
 
@@ -304,7 +302,8 @@ const Sidebar = () => {
                         const isSubOpen = item.subs && openSection === item.section; 
                         const IconComponent = item.icon || CubeIcon;
                         
-                        const itemBaseClasses = "flex items-center w-full p-3 rounded-lg transition-all duration-200 group relative";
+                        // Añadí 'flex-nowrap' para evitar que el texto baje si se comprime
+                        const itemBaseClasses = "flex items-center flex-nowrap w-full p-3 rounded-lg transition-all duration-200 group relative overflow-hidden";
                         const activeClasses = "bg-black text-white shadow-lg shadow-gray-200"; 
                         const inactiveClasses = "text-gray-600 hover:bg-gray-100 hover:text-black"; 
                         
@@ -312,34 +311,42 @@ const Sidebar = () => {
                             <div key={index}>
                                 {item.subs ? (
                                     <>
-                                        {/* Botón Principal del Menú */}
                                         <button 
                                             onClick={() => toggleSection(item.section)} 
                                             className={`${itemBaseClasses} ${isActive && !isHovered ? 'bg-gray-100 text-black' : (isActive ? activeClasses : inactiveClasses)}`}
                                             title={!isHovered ? item.section : ''}
                                         >
-                                            <IconComponent className="h-6 w-6 flex-shrink-0" /> 
+                                            <IconComponent className="h-6 w-6 flex-shrink-0 min-w-[24px]" /> 
                                             
-                                            {/* Texto del Menú */}
-                                            <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 
-                                                w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0' : 'md:w-auto md:opacity-100'}`}>
+                                            {/* CORRECCIÓN CRÍTICA DEL TEXTO: 
+                                                - md:ml-0: Elimina el margen en colapso.
+                                                - md:w-0: Ancho cero.
+                                            */}
+                                            <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-300 
+                                                ${!isHovered ? 'md:w-0 md:opacity-0 md:ml-0' : 'md:w-auto md:opacity-100 ml-3'}`}>
                                                 {item.section}
                                             </span>
 
                                             <ChevronDownIcon 
-                                                className={`ml-auto h-4 w-4 transition-transform duration-300 
+                                                className={`ml-auto h-4 w-4 transition-transform duration-300 flex-shrink-0
                                                 ${isSubOpen ? 'rotate-180' : ''}
                                                 ${!isHovered ? 'md:hidden' : ''}
                                             `} />
                                         </button>
 
-                                        {/* Contenedor de Submenús */}
-                                        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isSubOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+                                        {/* CORRECCIÓN CRÍTICA SUBMENÚS:
+                                            - Añadido: ${!isHovered ? 'md:hidden' : ''}
+                                            - Esto asegura que si estás en PC y la barra está cerrada, el submenú NO SE RENDERIZA, evitando que aparezca cortado.
+                                        */}
+                                        <div className={`overflow-hidden transition-all duration-300 ease-in-out 
+                                            ${isSubOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0'}
+                                            ${!isHovered ? 'md:hidden' : ''} 
+                                        `}>
                                             <ul className="ml-4 pl-4 border-l border-gray-200 space-y-1">
                                                 {item.subs.map((sub, idx) => (
                                                     <li key={idx}>
                                                         <Link to={sub.link} onClick={() => setIsOpen(false)} 
-                                                            className={`block py-2 px-3 rounded-md text-sm font-medium transition-colors
+                                                            className={`block py-2 px-3 rounded-md text-sm font-medium transition-colors truncate
                                                             ${location.pathname.startsWith(sub.link) 
                                                                 ? 'text-black bg-gray-50' 
                                                                 : 'text-gray-500 hover:text-black hover:bg-gray-50'}`}>
@@ -351,14 +358,15 @@ const Sidebar = () => {
                                         </div>
                                     </>
                                 ) : (
-                                    /* Ítem sin submenú (Link directo) */
                                     <Link to={item.link} onClick={() => setIsOpen(false)} 
                                         className={`${itemBaseClasses} ${isActive ? activeClasses : inactiveClasses}`}
                                         title={!isHovered ? item.section : ''}
                                     >
-                                        <IconComponent className="h-6 w-6 flex-shrink-0" />
-                                        <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300
-                                            w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0' : 'md:w-auto md:opacity-100'}`}>
+                                        <IconComponent className="h-6 w-6 flex-shrink-0 min-w-[24px]" />
+                                        
+                                        {/* MISMA CORRECCIÓN DE TEXTO PARA ITEMS SIN SUBMENÚ */}
+                                        <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-300
+                                            ${!isHovered ? 'md:w-0 md:opacity-0 md:ml-0' : 'md:w-auto md:opacity-100 ml-3'}`}>
                                             {item.section}
                                         </span>
                                     </Link>
@@ -373,9 +381,9 @@ const Sidebar = () => {
                     <button onClick={() => setShowConfirm(true)} 
                         className={`flex items-center w-full p-3 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group ${!isHovered ? 'md:justify-center' : ''}`} 
                         title="Cerrar Sesión">
-                        <ArrowRightOnRectangleIcon className="h-6 w-6 flex-shrink-0" />
-                        <span className={`ml-3 whitespace-nowrap overflow-hidden transition-all duration-300 font-medium 
-                            w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0' : 'md:w-auto md:opacity-100'}`}>
+                        <ArrowRightOnRectangleIcon className="h-6 w-6 flex-shrink-0 min-w-[24px]" />
+                        <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 font-medium 
+                             ${!isHovered ? 'md:w-0 md:opacity-0 md:ml-0' : 'md:w-auto md:opacity-100 ml-3'}`}>
                             Salir
                         </span>
                     </button>
