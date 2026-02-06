@@ -288,7 +288,6 @@ const Sidebar = () => {
             >
                 {/* HEADER */}
                 <div className={`flex items-center justify-center flex-shrink-0 border-b border-gray-100 transition-all duration-300 ${isHovered ? 'h-24' : 'h-20'}`}>
-                    {/* CORRECCIÓN TEXTO HEADER: Se oculta completamente el margen si no hay hover */}
                     <div className={`font-bold text-lg tracking-tight overflow-hidden transition-all duration-300 whitespace-nowrap 
                         w-auto opacity-100 ${!isHovered ? 'md:w-0 md:opacity-0 md:ml-0' : 'md:w-auto md:opacity-100 ml-3'}`}>
                         CRM - <span className="text-gray-400">ESCUELA</span>
@@ -318,10 +317,6 @@ const Sidebar = () => {
                                         >
                                             <IconComponent className="h-6 w-6 flex-shrink-0 min-w-[24px]" /> 
                                             
-                                            {/* CORRECCIÓN CRÍTICA DEL TEXTO: 
-                                                - md:ml-0: Elimina el margen en colapso.
-                                                - md:w-0: Ancho cero.
-                                            */}
                                             <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-300 
                                                 ${!isHovered ? 'md:w-0 md:opacity-0 md:ml-0' : 'md:w-auto md:opacity-100 ml-3'}`}>
                                                 {item.section}
@@ -334,10 +329,6 @@ const Sidebar = () => {
                                             `} />
                                         </button>
 
-                                        {/* CORRECCIÓN CRÍTICA SUBMENÚS:
-                                            - Añadido: ${!isHovered ? 'md:hidden' : ''}
-                                            - Esto asegura que si estás en PC y la barra está cerrada, el submenú NO SE RENDERIZA, evitando que aparezca cortado.
-                                        */}
                                         <div className={`overflow-hidden transition-all duration-300 ease-in-out 
                                             ${isSubOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0'}
                                             ${!isHovered ? 'md:hidden' : ''} 
@@ -364,7 +355,6 @@ const Sidebar = () => {
                                     >
                                         <IconComponent className="h-6 w-6 flex-shrink-0 min-w-[24px]" />
                                         
-                                        {/* MISMA CORRECCIÓN DE TEXTO PARA ITEMS SIN SUBMENÚ */}
                                         <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-300
                                             ${!isHovered ? 'md:w-0 md:opacity-0 md:ml-0' : 'md:w-auto md:opacity-100 ml-3'}`}>
                                             {item.section}
