@@ -37,7 +37,7 @@ const UsuarioForm = ({ data, handleNestedChange, isEditing = false }) => {
                             value={data.usuario.password || ''}
                             onChange={(e) => handleNestedChange('usuario', 'password', e.target.value)}
                             className={`w-full p-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-black outline-none ${passwordError ? 'border-red-500' : 'border-slate-300'}`}
-                            placeholder="8 caracteres y un simbolo"
+                            placeholder="Mínimo 8 caracteres"
                             required={!isEditing}
                         />
                         <button 
