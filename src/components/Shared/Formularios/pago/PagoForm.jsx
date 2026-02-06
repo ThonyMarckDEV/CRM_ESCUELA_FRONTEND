@@ -3,7 +3,7 @@ import AlumnoSearchSelect from 'components/Shared/Comboboxes/AlumnoSearchSelect'
 import { index as getMatriculas } from 'services/matriculaService';
 import { index as getConceptos } from 'services/conceptoPagoService';
 import { 
-    CalendarIcon, AcademicCapIcon, ExclamationCircleIcon, CheckBadgeIcon
+    CalendarIcon, AcademicCapIcon, ExclamationCircleIcon, CheckBadgeIcon, LockClosedIcon
 } from '@heroicons/react/24/outline';
 
 const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
@@ -12,21 +12,18 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
     const [conceptosOptions, setConceptosOptions] = useState([]);
     const [loadingMatricula, setLoadingMatricula] = useState(false);
     const [loadingConceptos, setLoadingConceptos] = useState(false);
+    
+    const [bloqueoMatricula, setBloqueoMatricula] = useState(false); 
 
     const { alumno_id, alumnoDni, alumnoNombre } = data;
 
     useEffect(() => {
-        
         if (!alumno_id) {
             setMatriculaInfo(null);
             setConceptosOptions([]);
+            setBloqueoMatricula(false);
             setForm(prev => ({ 
-                ...prev, 
-                matricula_id: '',
-                concepto_id: '',
-                monto: '',
-                nro_operacion: '',
-                observaciones: ''
+                ...prev, matricula_id: '', concepto_id: '', monto: '', nro_operacion: '', observaciones: '' 
             }));
             return;
         }
@@ -36,7 +33,6 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
             try {
                 const response = await getMatriculas(1, { search: alumnoDni || alumnoNombre }); 
                 const lista = response.data || [];
-
                 const matriculaActiva = lista.find(m => m.estado === 1 || m.estado === 0 || m.estado === 3);
 
                 if (matriculaActiva) {
@@ -58,7 +54,6 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
         };
 
         buscarMatricula();
-
     }, [alumno_id, alumnoDni, alumnoNombre, setForm]);
 
     useEffect(() => {
@@ -76,13 +71,23 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
                 const todosLosConceptos = response.data || [];
 
                 const pagosRealizados = matriculaInfo.pagos || [];
-                const idsConceptosPagados = pagosRealizados.map(p => String(p.concepto_id));
+                const idsPagados = pagosRealizados.map(p => String(p.concepto_id));
 
-                const conceptosPendientes = todosLosConceptos.filter(c => 
-                    !idsConceptosPagados.includes(String(c.id))
-                );
+                const conceptoMatricula = todosLosConceptos.find(c => c.tipo === 1);
+                
+                const matriculaPagada = conceptoMatricula && idsPagados.includes(String(conceptoMatricula.id));
 
-                setConceptosOptions(conceptosPendientes);
+                let listaFiltrada = [];
+
+                if (conceptoMatricula && !matriculaPagada) {
+                    listaFiltrada = [conceptoMatricula];
+                    setBloqueoMatricula(true);
+                } else {
+                    listaFiltrada = todosLosConceptos.filter(c => !idsPagados.includes(String(c.id)));
+                    setBloqueoMatricula(false);
+                }
+
+                setConceptosOptions(listaFiltrada);
 
             } catch (error) {
                 console.error("Error cargando conceptos", error);
@@ -98,7 +103,7 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
 
     const handleConceptoChange = (e) => {
         const conceptoId = e.target.value;
-        const conceptoSeleccionado = conceptosOptions.find(c => c.id === conceptoId);
+        const conceptoSeleccionado = conceptosOptions.find(c => c.id == conceptoId);
         
         setForm(prev => ({
             ...prev,
@@ -110,7 +115,7 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
     return (
         <div className={`space-y-8 ${disabled ? 'opacity-70 pointer-events-none' : ''}`}>
             
-            {/* SECCIÓN 1: BUSCADOR */}
+            {/* BUSCADOR */}
             <div>
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                     1. Identificación del Cliente
@@ -122,11 +127,10 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
                 />
             </div>
 
-            {/* SECCIÓN 2: INFO MATRÍCULA */}
+            {/* INFO MATRÍCULA */}
             <div className="min-h-[80px]">
                 {loadingMatricula && <div className="text-xs text-slate-500 animate-pulse">Buscando datos académicos...</div>}
                 
-                {/* SI HAY MATRÍCULA: Tarjeta de Info */}
                 {!loadingMatricula && matriculaInfo && (
                     <div className="bg-slate-50 border-l-4 border-black p-4 flex items-start gap-4 animate-in fade-in slide-in-from-top-2">
                         <div className="mt-1 text-black">
@@ -148,7 +152,6 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
                     </div>
                 )}
 
-                {/* SI NO HAY MATRÍCULA: Aviso de Error */}
                 {!loadingMatricula && data.alumno_id && !matriculaInfo && (
                     <div className="bg-red-50 border border-red-100 p-4 rounded text-red-800 flex items-center gap-2 text-sm animate-in zoom-in">
                         <ExclamationCircleIcon className="w-5 h-5"/>
@@ -157,12 +160,22 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
                 )}
             </div>
 
-            {/* SECCIÓN 3: FORMULARIO DE COBRO */}
+            {/* FORMULARIO DE COBRO */}
             {matriculaInfo && (
                 <div className="animate-in fade-in slide-in-from-bottom-4">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                         2. Detalles de Facturación
                     </h3>
+
+                    {/* ALERTA DE BLOQUEO DE MATRÍCULA */}
+                    {bloqueoMatricula && (
+                        <div className="mb-6 bg-yellow-50 border border-yellow-200 p-3 rounded-lg flex items-center gap-3 text-yellow-800 text-sm animate-in slide-in-from-left-2">
+                            <LockClosedIcon className="w-5 h-5 text-yellow-600" />
+                            <span>
+                                <strong>Pensiones bloqueadas:</strong> Debe cancelar la <u>Matrícula</u> antes de realizar otros pagos.
+                            </span>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
@@ -177,7 +190,7 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
                                     disabled={disabled}
                                     className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-none border-b-2 border-t-0 border-x-0 focus:ring-0 focus:border-black px-0 py-2.5 transition-colors cursor-pointer"
                                 >
-                                    <option value="">-- Seleccione deuda pendiente --</option>
+                                    <option value="">-- Seleccione concepto --</option>
                                     {loadingConceptos ? (
                                         <option>Verificando pagos...</option>
                                     ) : (
