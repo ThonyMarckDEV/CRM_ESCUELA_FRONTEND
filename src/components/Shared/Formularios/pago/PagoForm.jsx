@@ -103,7 +103,8 @@ const PagoForm = ({ data, handleChange, setForm, disabled = false }) => {
 
     const handleConceptoChange = (e) => {
         const conceptoId = e.target.value;
-        const conceptoSeleccionado = conceptosOptions.find(c => c.id === conceptoId);
+        
+        const conceptoSeleccionado = conceptosOptions.find(c => String(c.id) === String(conceptoId));
         
         setForm(prev => ({
             ...prev,
