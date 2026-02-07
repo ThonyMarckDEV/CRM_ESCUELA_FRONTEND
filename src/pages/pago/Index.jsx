@@ -82,14 +82,23 @@ const Index = () => {
     const isPaymentLocked = (dateString) => {
         if (!dateString) return false;
         
-        const paymentDate = new Date(dateString);
-        const now = new Date();
+        try {
+            const [fecha, hora] = dateString.split(' '); // Separar fecha y hora
+            const [dia, mes, anio] = fecha.split('/');   // Separar dia, mes, año
+            const [horas, minutos] = hora.split(':');    // Separar horas, minutos
 
-        const diffInMs = now - paymentDate;
-        
-        const diffInHours = diffInMs / (1000 * 60 * 60);
-        
-        return diffInHours > 24;
+            const paymentDate = new Date(anio, mes - 1, dia, horas, minutos);
+            const now = new Date();
+
+            // Calcular diferencia
+            const diffInMs = now - paymentDate;
+            const diffInHours = diffInMs / (1000 * 60 * 60);
+            
+            return diffInHours > 24;
+        } catch (e) {
+            console.error("Error al procesar fecha:", dateString);
+            return false;
+        }
     };
 
     const columns = useMemo(() => [
