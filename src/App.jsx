@@ -9,69 +9,69 @@ import SidebarLayout from 'layouts/SidebarLayout';
 // UIS AUTH & ERRORS
 import ErrorPage404 from 'components/ErrorPage404';
 import ErrorPage401 from 'components/ErrorPage401';
-import Login from 'ui/auth/Login/Login';
+import Login from 'pages/auth/Login/Login';
 
 // UI HOME
-import Home from 'ui/home/Home';
+import Home from 'pages/home/Home';
 
 //UI ANIO ACADEMICOS
-import AgregarAnioAcademico from 'ui/anioacademico/store/AgregarAnioAcademico';
-import EditarAnioAcademico from 'ui/anioacademico/update/EditarAnioAcademico';
-import ListarAniosAcademicos from 'ui/anioacademico/index/ListarAniosAcademicos';
+import AgregarAnioAcademico from 'pages/anioacademico/Store';
+import EditarAnioAcademico from 'pages/anioacademico/Update';
+import ListarAniosAcademicos from 'pages/anioacademico/Index';
 
 // UI PERIODOS
-import AgregarPeriodo from 'ui/periodo/store/AgregarPeriodo';
-import EditarPeriodo from 'ui/periodo/update/EditarPeriodo';
-import ListarPeriodos from 'ui/periodo/index/ListarPeriodos';
+import AgregarPeriodo from 'pages/periodo/Store';
+import EditarPeriodo from 'pages/periodo/Update';
+import ListarPeriodos from 'pages/periodo/Index';
 
 // UI CURSO
-import AgregarCurso from 'ui/curso/store/AgregarCurso';
-import EditarCurso from 'ui/curso/update/EditarCurso';
-import ListarCursos from 'ui/curso/index/ListarCursos';
+import AgregarCurso from 'pages/curso/Store';
+import EditarCurso from 'pages/curso/Update';
+import ListarCursos from 'pages/curso/Index';
 
 //UI GRADOS
-import AgregarGrado from 'ui/grado/store/AgregarGrado';
-import EditarGrado from 'ui/grado/update/EditarGrado';
-import ListarGrados from 'ui/grado/index/ListarGrados';
+import AgregarGrado from 'pages/grado/Store';
+import EditarGrado from 'pages/grado/Update';
+import ListarGrados from 'pages/grado/Index';
 
 //UI NIVEL
-import AgregarNivel from 'ui/nivel/store/AgregarNivel';
-import EditarNivel from 'ui/nivel/update/EditarNivel';
-import ListarNiveles from 'ui/nivel/index/ListarNiveles';
+import AgregarNivel from 'pages/nivel/Store';
+import EditarNivel from 'pages/nivel/Update';
+import ListarNiveles from 'pages/nivel/Index';
 
 //UI ALUMNO
-import AgregarAlumno from 'ui/alumno/store/AgregarAlumno';
-import EditarAlumno from 'ui/alumno/update/EditarAlumno';
-import ListarAlumnos from 'ui/alumno/index/ListarAlumnos';
+import AgregarAlumno from 'pages/alumno/Store';
+import EditarAlumno from 'pages/alumno/Update';
+import ListarAlumnos from 'pages/alumno/Index';
 
 //UI EMPLEADOS
-import AgregarEmpleado from 'ui/empleado/store/AgregarEmpleado';
-import EditarEmpleado from 'ui/empleado/update/EditarEmpleado';
-import ListarEmpleados from 'ui/empleado/index/ListarEmpleados';
+import AgregarEmpleado from 'pages/empleado/Store';
+import EditarEmpleado from 'pages/empleado/Update';
+import ListarEmpleados from 'pages/empleado/Index';
 
 //UI MALLA CURRICULAR
-import AgregarMallaCurricular from 'ui/mallacurricular/store/AgregarMallaCurricular';
-import EditarMallaCurricular from 'ui/mallacurricular/update/EditarMallaCurricular';
-import ListarMallasCurriculares from 'ui/mallacurricular/index/ListarMallaCurricular';
+import AgregarMallaCurricular from 'pages/mallacurricular/Store';
+import EditarMallaCurricular from 'pages/mallacurricular/Update';
+import ListarMallasCurriculares from 'pages/mallacurricular/Index';
 
 //UI SECCION
-import AgregarSeccion from 'ui/seccion/store/AgregarSeccion';
-import EditarSeccion from 'ui/seccion/update/EditarSeccion';
-import ListarSecciones from 'ui/seccion/index/ListarSecciones';
+import AgregarSeccion from 'pages/seccion/Store';
+import EditarSeccion from 'pages/seccion/Update';
+import ListarSecciones from 'pages/seccion/Index';
 
 //UI CONCEPTO PAGO
-import AgregarConceptoPago from 'ui/conceptopago/store/AgregarConceptoPago';
-import EditarConceptoPago from 'ui/conceptopago/update/EditarConceptoPago';
-import ListarConceptosPago from 'ui/conceptopago/index/ListarConceptosPago';
+import AgregarConceptoPago from 'pages/conceptopago/Store';
+import EditarConceptoPago from 'pages/conceptopago/Update';
+import ListarConceptosPago from 'pages/conceptopago/Index';
 
 //UI MATRICULA
-import AgregarMatricula from 'ui/matricula/store/AgregarMatricula';
-import EditarMatricula from 'ui/matricula/update/EditarMatricula';
-import ListarMatriculas from 'ui/matricula/index/ListarMatriculas';
+import AgregarMatricula from 'pages/matricula/Store';
+import EditarMatricula from 'pages/matricula/Update';
+import ListarMatriculas from 'pages/matricula/Index';
 
 //UI PAGO
-import AgregarPago from 'ui/pago/store/AgregarPago';
-import ListarPagos from 'ui/pago/index/ListarPagos';
+import AgregarPago from 'pages/pago/Store';
+import ListarPagos from 'pages/pago/Index';
 
 
 // Utilities

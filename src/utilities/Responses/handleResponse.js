@@ -6,11 +6,20 @@ export const handleResponse = async (response) => {
     const result = await response.json();
 
     if (!response.ok) {
+        // Lógica de detección de detalles
+        let rawDetails = result.details;
+
+        // Si no hay details, buscamos errors (Laravel default)
+        if (!rawDetails && result.errors) {
+            rawDetails = Object.values(result.errors).flat();
+        }
+
         const error = {
             type: 'error',
             message: result.message || 'Ocurrió un error inesperado.',
-            details: result.errors ? Object.values(result.errors).flat() : undefined,
+            details: rawDetails, 
         };
+        
         throw error;
     }
 
@@ -18,10 +27,9 @@ export const handleResponse = async (response) => {
         return result; 
     }
 
-    const success = {
+    return {
         type: 'success',
         message: result.message || 'Operación realizada con éxito.',
         data: result.data || result,
     };
-    return success;
 };
