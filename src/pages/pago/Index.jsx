@@ -163,7 +163,7 @@ const Index = () => {
                     </button>
 
                     {/* LÓGICA CONDICIONAL: CANDADO vs BASURA */}
-                    {isPaymentLocked(row.created_at) ? (
+                    {isPaymentLocked(row.fecha_pago) ? (
                         // MODO BLOQUEADO (Más de 24 horas)
                         <div 
                             className="p-1.5 text-gray-300 cursor-not-allowed"
