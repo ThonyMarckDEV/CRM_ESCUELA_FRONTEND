@@ -10,7 +10,8 @@ import {
     BanknotesIcon, 
     TrashIcon, 
     UserIcon,
-    PrinterIcon
+    PrinterIcon,
+    LockClosedIcon
 } from '@heroicons/react/24/outline';
 
 const Index = () => {
@@ -23,7 +24,6 @@ const Index = () => {
     const [alert, setAlert] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
-    // ESTADOS PARA PDF
     const [pdfUrl, setPdfUrl] = useState(null);
     const [showPdfModal, setShowPdfModal] = useState(false);
     const [loadingTicket, setLoadingTicket] = useState(false);
@@ -77,6 +77,19 @@ const Index = () => {
         } finally {
             setDeleteModal({ isOpen: false, id: null });
         }
+    };
+
+    const isPaymentLocked = (dateString) => {
+        if (!dateString) return false;
+        
+        const paymentDate = new Date(dateString);
+        const now = new Date();
+
+        const diffInMs = now - paymentDate;
+        
+        const diffInHours = diffInMs / (1000 * 60 * 60);
+        
+        return diffInHours > 24;
     };
 
     const columns = useMemo(() => [
@@ -138,8 +151,8 @@ const Index = () => {
         {
             header: 'Acciones',
             render: (row) => !row.es_anulado && (
-                <div className="flex gap-2">
-                    {/* BOTÓN REIMPRIMIR */}
+                <div className="flex gap-2 items-center">
+                    {/* BOTÓN REIMPRIMIR  */}
                     <button 
                         onClick={() => handlePrintTicket(row.id)}
                         disabled={loadingTicket}
@@ -149,14 +162,25 @@ const Index = () => {
                         <PrinterIcon className="w-5 h-5" />
                     </button>
 
-                    {/* BOTÓN ANULAR */}
-                    <button 
-                        onClick={() => setDeleteModal({ isOpen: true, id: row.id })}
-                        className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Anular Pago"
-                    >
-                        <TrashIcon className="w-5 h-5" />
-                    </button>
+                    {/* LÓGICA CONDICIONAL: CANDADO vs BASURA */}
+                    {isPaymentLocked(row.created_at) ? (
+                        // MODO BLOQUEADO (Más de 24 horas)
+                        <div 
+                            className="p-1.5 text-gray-300 cursor-not-allowed"
+                            title="Bloqueado: El pago tiene más de 24 horas y no puede ser anulado."
+                        >
+                            <LockClosedIcon className="w-5 h-5" />
+                        </div>
+                    ) : (
+                        // MODO PERMITIDO (Menos de 24 horas)
+                        <button 
+                            onClick={() => setDeleteModal({ isOpen: true, id: row.id })}
+                            className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Anular Pago"
+                        >
+                            <TrashIcon className="w-5 h-5" />
+                        </button>
+                    )}
                 </div>
             )
         }
@@ -166,8 +190,6 @@ const Index = () => {
 
     return (
         <div className="container mx-auto p-6">
-            
-            {/* MODAL DE PDF (Se abre al reimprimir) */}
             <PdfModal 
                 isOpen={showPdfModal} 
                 onClose={handleClosePdf} 
