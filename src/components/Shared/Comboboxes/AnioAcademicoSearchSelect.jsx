@@ -85,7 +85,7 @@ const AnioAcademicoSearchSelect = ({ form, setForm, disabled, isFilter = false }
         <div className="relative w-full" ref={wrapperRef}>
             
             {!isFilter && (
-                <label className="block text-[11px] font-black text-slate-700 uppercase mb-1.5 tracking-wider">
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                     Año Académico <span className="text-red-500">*</span>
                 </label>
             )}

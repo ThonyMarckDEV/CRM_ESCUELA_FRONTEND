@@ -97,7 +97,7 @@ const GradoSearchSelect = ({ form, setForm, disabled, isFilter = false }) => {
         <div className="relative w-full" ref={wrapperRef}>
             
             {!isFilter && (
-                <label className="block text-sm font-black text-slate-700 uppercase mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                     Grado <span className="text-red-500">*</span>
                 </label>
             )}

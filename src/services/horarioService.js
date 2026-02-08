@@ -2,35 +2,34 @@ import { fetchWithAuth } from 'js/authToken';
 import API_BASE_URL from 'js/urlHelper';
 import { handleResponse } from 'utilities/Responses/handleResponse';
 
-const BASE_URL = `${API_BASE_URL}/api/malla-curricular`;
+// NOTA: Asegúrate de que este endpoint coincida con tu Route::prefix en Laravel
+const BASE_URL = `${API_BASE_URL}/api/horario`;
 
-// GET: Listar con filtros
+// GET: Listar con filtros (Año, Docente, Día, Sección)
 export const index = async (page = 1, filters = {}) => {
   const params = new URLSearchParams({
     page: page,
-    grado: filters.grado_id || '',
-    curso: filters.curso_id || '',
-    search: filters.search || ''
+    docente: filters.docente_id || '',
+    anio: filters.anio_academico_id || '',
+    seccion: filters.seccion_id || '',
+    dia: filters.dia_semana || ''
   });
 
-  const response = await fetchWithAuth(`${BASE_URL}/index?${params.toString()}`, { method: 'GET' });
-  return handleResponse(response);
-};
-
-export const indexAlumno = async (gradoId) => {
-  const response = await fetchWithAuth(`${BASE_URL}/index?grado=${gradoId}`, { 
+  const response = await fetchWithAuth(`${BASE_URL}/index?${params.toString()}`, { 
     method: 'GET' 
   });
   return handleResponse(response);
 };
 
-// GET: Ver uno
+// GET: Obtener un horario específico (para editar)
 export const show = async (id) => {
-  const response = await fetchWithAuth(`${BASE_URL}/show/${id}`, { method: 'GET' });
+  const response = await fetchWithAuth(`${BASE_URL}/show/${id}`, { 
+    method: 'GET' 
+  });
   return handleResponse(response);
 };
 
-// POST: Crear
+// POST: Crear nuevo horario
 export const store = async (data) => {
   const response = await fetchWithAuth(`${BASE_URL}/store`, {
     method: 'POST',
@@ -40,7 +39,7 @@ export const store = async (data) => {
   return handleResponse(response);
 };
 
-// PUT: Actualizar
+// PUT: Actualizar horario existente
 export const update = async (id, data) => {
   const response = await fetchWithAuth(`${BASE_URL}/update/${id}`, {
     method: 'PUT',
@@ -50,8 +49,10 @@ export const update = async (id, data) => {
   return handleResponse(response);
 };
 
-// DELETE: Eliminar
+// DELETE: Eliminar horario
 export const destroy = async (id) => {
-    const response = await fetchWithAuth(`${BASE_URL}/delete/${id}`, { method: 'DELETE' });
+    const response = await fetchWithAuth(`${BASE_URL}/delete/${id}`, { 
+        method: 'DELETE' 
+    });
     return handleResponse(response);
 };

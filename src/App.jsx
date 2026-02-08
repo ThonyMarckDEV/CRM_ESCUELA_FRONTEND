@@ -73,6 +73,12 @@ import ListarMatriculas from 'pages/matricula/Index';
 import AgregarPago from 'pages/pago/Store';
 import ListarPagos from 'pages/pago/Index';
 
+//UI HORARIO
+import AgregarHorario from 'pages/horario/Store';
+import EditarHorario  from 'pages/horario/Update';
+import ListarHorarios from 'pages/horario/Index';
+
+
 
 // Utilities
 import ProtectedRouteHome from 'utilities/ProtectedRoutes/ProtectedRouteHome';
@@ -206,6 +212,16 @@ function AppContent() {
             <Route path="/matricula/agregar" element={<AgregarMatricula />} />
             <Route path="/matricula/editar/:id" element={<EditarMatricula />} />
             <Route path="/matricula/listar" element={<ListarMatriculas />} />
+        </Route>
+
+        {/* =======================================================
+            MÓDULO: HORARIO
+           ======================================================= */}
+
+        <Route element={<ProtectedRoute element={<Outlet />} />}>
+            <Route path="/horario/agregar" element={<AgregarHorario />} allowedRoles={['superadmin' , 'admin']}/>
+            <Route path="/horario/editar/:id" element={<EditarHorario />} allowedRoles={['superadmin' , 'admin']}/>
+            <Route path="/horario/listar" element={<ListarHorarios />} allowedRoles={['superadmin' , 'admin' , 'docente' , 'alumno']}/>
         </Route>
 
         {/* =======================================================

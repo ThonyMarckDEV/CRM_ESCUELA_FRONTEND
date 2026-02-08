@@ -214,6 +214,28 @@ const MASTER_MENU = [
             },
         ],
     },
+    { 
+        section: 'Horarios Docentes', 
+        icon: CalendarDaysIcon, 
+        allowedRoles: ['superadmin', 'admin', 'docente', 'alumno'], 
+        subs: [
+            { 
+                name: 'Listar Horarios', 
+                link: '/horario/listar', 
+                allowedRoles: ['superadmin' , 'admin']
+            },
+            { 
+                name: 'Agregar Horario', 
+                link: '/horario/agregar',
+                allowedRoles: ['superadmin' , 'admin'] 
+            },
+            { 
+                name: 'Mi Horario',
+                link: '/horario/listar', 
+                allowedRoles: ['docente', 'alumno']
+            },
+        ],
+    },
 ];
 
 const Sidebar = () => {
