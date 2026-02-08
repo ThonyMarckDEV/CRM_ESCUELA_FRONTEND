@@ -41,6 +41,12 @@ const Home = () => {
         </p>
       )}
 
+      {rol === "docente" && (
+        <p className="mt-4 text-yellow-300 font-semibold">
+          Contenido para docentes.
+        </p>
+      )}
+
       {rol === "cajero" && (
         <p className="mt-4 text-pink-500 font-semibold">
           Herramientas de caja.
