@@ -35,33 +35,15 @@ const Home = () => {
         </p>
       )}
 
-      {rol === "cliente" && (
+      {rol === "alumno" && (
         <p className="mt-4 text-blue-500 font-semibold">
-          Contenido para clientes.
-        </p>
-      )}
-
-      {rol === "asesor" && (
-        <p className="mt-4 text-purple-500 font-semibold">
-          Herramientas de asesor.
-        </p>
-      )}
-
-      {rol === "auditor" && (
-        <p className="mt-4 text-orange-500 font-semibold">
-          Panel de auditoría.
+          Contenido para alumnos.
         </p>
       )}
 
       {rol === "cajero" && (
         <p className="mt-4 text-pink-500 font-semibold">
           Herramientas de caja.
-        </p>
-      )}
-
-      {rol === "jefe_negocios" && (
-        <p className="mt-4 text-gray-500 font-semibold">
-          Herramientas de jefe negocios.
         </p>
       )}
 

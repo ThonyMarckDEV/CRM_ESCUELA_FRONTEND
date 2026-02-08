@@ -90,7 +90,7 @@ function AppContent() {
         element={
           <ProtectedRoute 
             element={<SidebarLayout />} 
-            allowedRoles={['superadmin', 'admin', 'usuario' , 'docente' , 'cajero' ]} 
+            allowedRoles={['superadmin', 'admin', 'alumno' , 'docente' , 'cajero' ]} 
           />
         }
       >
@@ -171,10 +171,10 @@ function AppContent() {
             MÓDULO: MALLA CURRICULAR
            ======================================================= */}
 
-        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
-            <Route path="/malla-curricular/agregar" element={<AgregarMallaCurricular />} />
-            <Route path="/malla-curricular/editar/:id" element={<EditarMallaCurricular />} />
-            <Route path="/malla-curricular/listar" element={<ListarMallasCurriculares />} allowedRoles={['superadmin' , 'docente']} />
+        <Route element={<ProtectedRoute element={<Outlet />} />}>
+            <Route path="/malla-curricular/agregar" element={<AgregarMallaCurricular />} allowedRoles={['superadmin' ]}/>
+            <Route path="/malla-curricular/editar/:id" element={<EditarMallaCurricular />} allowedRoles={['superadmin' ]}/>
+            <Route path="/malla-curricular/listar" element={<ListarMallasCurriculares />} allowedRoles={['superadmin' , 'docente' , 'alumno']} />
         </Route>
 
 

@@ -90,16 +90,17 @@ const MASTER_MENU = [
     { 
         section: 'Malla Curricular', 
         icon: ListBulletIcon,
-        allowedRoles: ['superadmin'],
+        allowedRoles: ['superadmin','alumno'],
         subs: [
             { 
                 name: 'Listar Mallas', 
                 link: '/malla-curricular/listar', 
-                allowedRoles: ['superadmin', 'docente']
+                allowedRoles: ['superadmin', 'docente' , 'alumno']
             },
             { 
                 name: 'Agregar Malla', 
                 link: '/malla-curricular/agregar', 
+                allowedRoles: ['superadmin']
             },
         ],
     },

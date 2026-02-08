@@ -16,19 +16,18 @@ export const AuthProvider = ({ children }) => {
         const token = jwtUtils.getAccessTokenFromCookie();
         
         if (!token) {
-            setUser(null);
-            setRole(null);
-            setIsAuthenticated(false);
-            setLoading(false);
+            handleLogoutState();
             return;
         }
 
         try {
-            const userData = await authService.verifySession();
+            const response = await authService.verifySession();
+
+            const userData = response.data || response;
 
             setUser(userData); 
             
-            const userRole = userData.data.rol.nombre;
+            const userRole = userData.rol?.nombre || null;
             
             setRole(userRole);
             setIsAuthenticated(true);
@@ -36,12 +35,18 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Sesión no válida:", error);
             logoutAction(); 
-            setUser(null);
-            setRole(null);
-            setIsAuthenticated(false);
+            handleLogoutState();
         } finally {
             setLoading(false);
         }
+    };
+
+    // Helper para limpiar estado
+    const handleLogoutState = () => {
+        setUser(null);
+        setRole(null);
+        setIsAuthenticated(false);
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -55,9 +60,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         logoutAction();
-        setUser(null);
-        setRole(null);
-        setIsAuthenticated(false);
+        handleLogoutState();
     };
 
     return (

@@ -16,6 +16,13 @@ export const index = async (page = 1, filters = {}) => {
   return handleResponse(response);
 };
 
+export const indexAlumno = async (gradoId) => {
+  const response = await fetchWithAuth(`${BASE_URL}/index?grado=${gradoId}`, { 
+    method: 'GET' 
+  });
+  return handleResponse(response);
+};
+
 // GET: Ver uno
 export const show = async (id) => {
   const response = await fetchWithAuth(`${BASE_URL}/show/${id}`, { method: 'GET' });
