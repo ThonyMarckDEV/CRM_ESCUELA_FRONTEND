@@ -95,12 +95,17 @@ const MASTER_MENU = [
             { 
                 name: 'Listar Mallas', 
                 link: '/malla-curricular/listar', 
-                allowedRoles: ['superadmin', 'docente' , 'alumno']
+                allowedRoles: ['superadmin']
             },
             { 
                 name: 'Agregar Malla', 
                 link: '/malla-curricular/agregar', 
                 allowedRoles: ['superadmin']
+            },
+            { 
+                name: 'Mis Cursos',
+                link: '/malla-curricular/listar', 
+                allowedRoles: ['alumno'] 
             },
         ],
     },

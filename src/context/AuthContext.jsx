@@ -51,6 +51,7 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         checkAuth();
+        // eslint-disable-next-line
     }, []);
 
     const login = async () => {
