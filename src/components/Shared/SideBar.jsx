@@ -215,7 +215,7 @@ const MASTER_MENU = [
         ],
     },
     { 
-        section: 'Horarios Docentes', 
+        section: 'Horarios', 
         icon: CalendarDaysIcon, 
         allowedRoles: ['superadmin', 'admin', 'docente', 'alumno'], 
         subs: [

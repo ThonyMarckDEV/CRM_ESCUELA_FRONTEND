@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from 'context/AuthContext';
-import { index, indexAlumno, destroy } from 'services/mallaCurricularService';
+import { index, destroy } from 'services/mallaCurricularService';
 
 import Table from 'components/Shared/Tables/Table';
 import PageHeader from 'components/Shared/Headers/PageHeader';
@@ -13,30 +13,21 @@ import GradoSearchSelect from 'components/Shared/Comboboxes/GradoSearchSelect';
 import CursoSearchSelect from 'components/Shared/Comboboxes/CursoSearchSelect';
 
 import { 
-    BookOpenIcon, 
-    PencilSquareIcon, 
-    ClockIcon, 
-    AcademicCapIcon,
-    LockClosedIcon,
-    TrashIcon,
-    ExclamationTriangleIcon
+    BookOpenIcon, PencilSquareIcon, ClockIcon, AcademicCapIcon, 
+    LockClosedIcon, TrashIcon, ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 const Index = () => {
-  const { user } = useAuth();
-
-  const rolNombre = user?.rol?.nombre || '';
-  const isAlumno = rolNombre.toLowerCase() === 'alumno';
+  const {role, loading: authLoading } = useAuth();
   
-  const alumnoGradoId = user?.alumno_data?.grado_id;
-  const alumnoGradoNombre = user?.alumno_data?.grado_nombre;
+  const isAlumno = role === 'alumno';
+  const isDocente = role === 'docente';
 
   const [loading, setLoading] = useState(true);
   const [mallas, setMallas] = useState([]);
   const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1 });
   
-  // Filtros (Admin)
-  const [filters, setFilters] = useState({ search: '', grado_id: '', gradoNombre: '', curso_id: '', cursoNombre: '' });
+  const [filters, setFilters] = useState({ search: '', grado_id: '', curso_id: '' });
   const filtersRef = useRef(filters);
   
   const [alert, setAlert] = useState(null);
@@ -44,23 +35,11 @@ const Index = () => {
   const [idToDelete, setIdToDelete] = useState(null);
 
   const fetchMalla = useCallback(async (page = 1) => {
-    if (!user) return; 
+    if (authLoading) return; 
 
     setLoading(true);
     try {
-      let response;
-
-      if (isAlumno) {
-        if (!alumnoGradoId) {
-            console.warn("Es alumno pero no tiene grado_id");
-            setMallas([]);
-            setLoading(false);
-            return;
-        }
-        response = await indexAlumno(page, alumnoGradoId);
-      } else {
-        response = await index(page, filtersRef.current);
-      }
+      const response = await index(page, filtersRef.current);
 
       setMallas(response.data || []);
       setPaginationInfo({
@@ -74,20 +53,26 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, isAlumno, alumnoGradoId]);
+  }, [authLoading]);
 
-  useEffect(() => { fetchMalla(1); }, [fetchMalla]);
+  useEffect(() => { 
+      if(!authLoading) fetchMalla(1); 
+  }, [fetchMalla, authLoading]);
 
   useEffect(() => {
-    if (!isAlumno && (filters.grado_id !== filtersRef.current.grado_id || filters.curso_id !== filtersRef.current.curso_id)) {
+
+    if (isAlumno) return;
+
+    if (filters.grado_id !== filtersRef.current.grado_id || filters.curso_id !== filtersRef.current.curso_id) {
         filtersRef.current = { ...filtersRef.current, grado_id: filters.grado_id, curso_id: filters.curso_id };
         fetchMalla(1); 
     }
-  }, [filters.grado_id, filters.curso_id, fetchMalla, isAlumno]);
+  }, [filters, fetchMalla, isAlumno]);
 
   
+  // CONFIGURACIÓN DE FILTROS (Solo Admin/Docente)
   const filterConfig = useMemo(() => {
-      if (isAlumno) return [];
+      if (isAlumno) return []; // Alumno no filtra
 
       return [
         {
@@ -101,8 +86,9 @@ const Index = () => {
       ];
   }, [filters, isAlumno]);
 
+  // COLUMNAS
   const columns = useMemo(() => {
-    // --- COLUMNAS ALUMNO ---
+    // --- VISTA ALUMNO ---
     if (isAlumno) {
         return [
             {
@@ -128,8 +114,8 @@ const Index = () => {
         ];
     }
 
-    // --- COLUMNAS ADMIN ---
-    return [
+    // --- VISTA ADMIN / DOCENTE ---
+    const cols = [
         {
           header: 'Grado',
           render: (row) => (
@@ -158,8 +144,12 @@ const Index = () => {
                   {row.horas_semanales} hrs
               </span>
             )
-        },
-        {
+        }
+    ];
+
+    // Acciones solo para Admin (Docente usualmente solo ve, no edita malla)
+    if (!isDocente && !isAlumno) {
+        cols.push({
             header: 'Acciones',
             render: (row) => (
               <div className="flex items-center gap-3">
@@ -175,29 +165,29 @@ const Index = () => {
                 )}
               </div>
             )
-        }
-    ];
-  }, [isAlumno]);
+        });
+    }
+    return cols;
+  }, [isAlumno, isDocente]);
 
-  // Handle Delete (Admin)
+  // Manejo de eliminación (Admin)
   const handleConfirmDelete = async () => {
     setShowConfirm(false); setLoading(true);
     try { await destroy(idToDelete); setAlert({ type: 'success', message: 'Eliminado.' }); fetchMalla(paginationInfo.currentPage); }
     catch (err) { setAlert(handleApiError(err, 'Error eliminar')); } finally { setLoading(false); setIdToDelete(null); }
   };
 
-
-  if (!user) return null;
-
-  if (isAlumno && !alumnoGradoId && !loading) {
+  // Render "Sin Matrícula" para alumno
+  // Detectamos esto si la carga terminó, no hubo error, pero el array está vacío
+  if (isAlumno && !loading && mallas.length === 0) {
       return (
         <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[50vh] text-center animate-in fade-in">
             <div className="bg-orange-50 p-6 rounded-full mb-4">
                 <ExclamationTriangleIcon className="w-16 h-16 text-orange-400" />
             </div>
-            <h2 className="text-2xl font-black text-slate-800 mb-2">No tienes matrícula activa</h2>
+            <h2 className="text-2xl font-black text-slate-800 mb-2">No tienes cursos asignados</h2>
             <p className="text-slate-500 max-w-md">
-                No se encontraron cursos asignados para el periodo actual.
+                No se encontró una matrícula activa o cursos para tu grado actual.
             </p>
         </div>
       );
@@ -206,9 +196,9 @@ const Index = () => {
   return (
     <div className="container mx-auto p-6">
       <PageHeader 
-        title={isAlumno ? `Mis Cursos - ${alumnoGradoNombre || ''}` : "Gestión de Malla Curricular"} 
+        title={isAlumno ? "Mis Cursos" : "Gestión de Malla Curricular"} 
         icon={BookOpenIcon} 
-        buttonText={!isAlumno ? "+ Asignar Curso" : null} 
+        buttonText={(!isAlumno && !isDocente) ? "+ Asignar Curso" : null} 
         buttonLink="/malla-curricular/agregar" 
       />
 
@@ -219,7 +209,7 @@ const Index = () => {
         data={mallas || []}
         loading={loading}
         filterConfig={filterConfig} 
-        filters={isAlumno ? {} : filters}
+        filters={isAlumno ? {} : filters} // Alumno no usa filtros visuales
         
         onFilterChange={(name, val) => setFilters(prev => ({...prev, [name]: val}))}
         onFilterSubmit={() => { filtersRef.current = filters; fetchMalla(1); }}
