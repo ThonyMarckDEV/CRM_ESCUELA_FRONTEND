@@ -3,9 +3,10 @@ import { UserIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const UsuarioForm = ({ data, handleNestedChange, isEditing = false }) => {
     const [showPass, setShowPass] = useState(false);
-    const [confirmPassword, setConfirmPassword] = useState('');
 
-    const passwordError = !isEditing && confirmPassword && data.usuario.password !== confirmPassword;
+    const passwordError = 
+        data.usuario.password_confirmation && 
+        data.usuario.password !== data.usuario.password_confirmation;
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-6">
@@ -14,7 +15,7 @@ const UsuarioForm = ({ data, handleNestedChange, isEditing = false }) => {
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {/* Username */}
+                {/* Nombre de Usuario */}
                 <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Nombre de Usuario *</label>
                     <input
@@ -57,6 +58,7 @@ const UsuarioForm = ({ data, handleNestedChange, isEditing = false }) => {
                     </label>
                     <input
                         type="password"
+                        // Usamos password_confirmation para que Laravel lo valide automáticamente
                         value={data.usuario.password_confirmation || ''} 
                         onChange={(e) => handleNestedChange('usuario', 'password_confirmation', e.target.value)}
                         disabled={isEditing && !data.usuario.password}
