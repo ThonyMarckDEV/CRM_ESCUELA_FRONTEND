@@ -13,12 +13,10 @@ const Store = () => {
   const [formData, setFormData] = useState({ 
     anio_academico_id: '', 
     docente_id: '', 
-    seccion_id: '', 
-    grado_id: '',
+    seccion_id: '', seccionNombre: '',
+    grado_id: '', gradoNombre: '',
     malla_curricular_id: '', 
-    
     horariosMatrix: {},
-    
     aula_fisica: ''
   });
   
@@ -30,21 +28,18 @@ const Store = () => {
     setLoading(true);
     setAlert(null);
 
-    // 1. Validar campos generales
     if (!formData.docente_id || !formData.malla_curricular_id || !formData.seccion_id) {
         setAlert({ type: 'error', message: 'Complete los campos generales.' });
         setLoading(false);
         return;
     }
 
-    // 2. Convertir Matriz a Array para el Backend
     const horariosArray = Object.entries(formData.horariosMatrix).map(([diaId, horas]) => ({
         dia_semana: parseInt(diaId),
         hora_inicio: horas.hora_inicio,
         hora_fin: horas.hora_fin
     }));
 
-    // 3. Validar que haya días y que tengan hora
     if (horariosArray.length === 0) {
         setAlert({ type: 'error', message: 'Seleccione al menos un día.' });
         setLoading(false);
@@ -58,10 +53,9 @@ const Store = () => {
         return;
     }
 
-    // 4. Preparar Payload Final
     const payload = {
         ...formData,
-        horarios: horariosArray // Enviamos el array transformado
+        horarios: horariosArray
     };
 
     try {
@@ -88,7 +82,7 @@ const Store = () => {
             <HorarioForm 
                 data={formData} 
                 handleChange={handleChange} 
-                setForm={setFormData} 
+                setForm={setFormData}
             />
             <button type="submit" disabled={loading} className="mt-8 w-full bg-black text-white py-3 rounded-lg font-black uppercase hover:bg-zinc-800 disabled:opacity-50 transition-all shadow-lg">
                 {loading ? 'Validando y Guardando...' : 'Asignar Horarios'}

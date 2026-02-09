@@ -14,33 +14,24 @@ import SeccionSearchSelect from 'components/Shared/Comboboxes/SeccionSearchSelec
 import HorarioSeccionModal from 'components/Shared/Tables/HorarioSeccionModal';
 
 import { 
-    CalendarDaysIcon, 
-    ClockIcon, 
-    PencilSquareIcon, 
-    TrashIcon, 
-    UserIcon,
-    MapPinIcon,
-    BookOpenIcon
+    CalendarDaysIcon, ClockIcon, PencilSquareIcon, TrashIcon, UserIcon, MapPinIcon, BookOpenIcon, EyeIcon
 } from '@heroicons/react/24/outline';
-import { EyeIcon } from 'lucide-react';
 
 const Index = () => {
     const [loading, setLoading] = useState(true);
     const [horarios, setHorarios] = useState([]);
     const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1 });
-    
+
     const [filters, setFilters] = useState({ 
-        anio_academico_id: '', 
-        docente_id: '',
-        grado_id: '',
-        seccion_id: '', seccionNombre: ''
+        anio_academico_id: '', docente_id: '', grado_id: '', seccion_id: '', seccionNombre: ''
     });
+
+    
     const filtersRef = useRef(filters);
     const [showHorarioModal, setShowHorarioModal] = useState(false);
-    
     const [alert, setAlert] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, descripcion: '' });
-
+ 
     const fetchHorarios = useCallback(async (page = 1) => {
         setLoading(true);
         try {
@@ -58,8 +49,6 @@ const Index = () => {
         }
     }, []);
 
-    useEffect(() => { fetchHorarios(1); }, [fetchHorarios]);
-
     useEffect(() => {
         if (
             filters.anio_academico_id !== filtersRef.current.anio_academico_id || 
@@ -67,16 +56,12 @@ const Index = () => {
             filters.grado_id !== filtersRef.current.grado_id ||
             filters.seccion_id !== filtersRef.current.seccion_id
         ) {
-            filtersRef.current = { 
-                ...filtersRef.current, 
-                anio_academico_id: filters.anio_academico_id, 
-                docente_id: filters.docente_id,
-                grado_id: filters.grado_id ,
-                seccion_id: filters.seccion_id
-            };
+            filtersRef.current = { ...filters };
             fetchHorarios(1); 
         }
-    }, [filters.anio_academico_id, filters.docente_id, filters.grado_id,filters.seccion_id , fetchHorarios]);
+    }, [filters, fetchHorarios]);
+
+    useEffect(() => { fetchHorarios(1); }, [fetchHorarios]);
 
     const handleConfirmDelete = async () => {
         try {
@@ -159,18 +144,13 @@ const Index = () => {
         }
     ], []);
 
-    // --- ACTUALIZADO: Configuración de filtros ---
     const filterConfig = useMemo(() => [
         { 
-            name: 'anio_academico_id', 
-            type: 'custom', 
-            colSpan: 'col-span-12 md:col-span-3',
+            name: 'anio_academico_id', type: 'custom', colSpan: 'col-span-12 md:col-span-3',
             render: () => <AnioAcademicoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
         },
         { 
-            name: 'grado_id', // <--- Filtro de Grado
-            type: 'custom', 
-            colSpan: 'col-span-12 md:col-span-3',
+            name: 'grado_id', type: 'custom', colSpan: 'col-span-12 md:col-span-3',
             render: () => <GradoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
         },
         { 
@@ -186,14 +166,12 @@ const Index = () => {
             )
         },
         { 
-            name: 'docente_id', 
-            type: 'custom', 
-            colSpan: 'col-span-12 md:col-span-4',
+            name: 'docente_id', type: 'custom', colSpan: 'col-span-12 md:col-span-3',
             render: () => <DocenteSearchSelect form={filters} setForm={setFilters} isFilter={true} />
         }
-    ], [filters]);
+    ], [filters, setFilters]);
 
-   return (
+    return (
         <div className="container mx-auto p-6">
             <PageHeader title="Gestión de Horarios" icon={CalendarDaysIcon} buttonText="+ Nuevo Horario" buttonLink="/horario/agregar" />
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
@@ -231,7 +209,6 @@ const Index = () => {
                 }}
             />
 
-            {/* MODAL DEL HORARIO */}
             {showHorarioModal && (
                 <HorarioSeccionModal 
                     seccionId={filters.seccion_id}
@@ -240,7 +217,6 @@ const Index = () => {
                 />
             )}
 
-            {/* MODAL DE ELIMINAR */}
             {deleteModal.isOpen && (
                 <ConfirmModal 
                     title="¿Eliminar Horario?" 

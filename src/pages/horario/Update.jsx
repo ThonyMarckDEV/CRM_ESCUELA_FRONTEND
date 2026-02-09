@@ -16,7 +16,7 @@ const Update = () => {
     anio_academico_id: '', anioNombre: '',
     docente_id: '', docenteNombre: '',
     seccion_id: '', seccionNombre: '',
-    grado_id: '', 
+    grado_id: '', gradoNombre: '', 
     malla_curricular_id: '', cursoNombre: '',
     dia_semana: '',
     hora_inicio: '',
@@ -24,10 +24,7 @@ const Update = () => {
     aula_fisica: ''
   });
   
-  const [security, setSecurity] = useState({
-    hasAsistencia: false 
-  });
-
+  const [security, setSecurity] = useState({ hasAsistencia: false });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [alert, setAlert] = useState(null);
@@ -44,28 +41,16 @@ const Update = () => {
 
            setFormData({
                 id: data.id,
-                
-                // AÑO ACADÉMICO
                 anio_academico_id: data.anio_academico_id,
                 anioNombre: data.nombre_anio || '',
-
-                // DOCENTE
                 docente_id: data.docente_id,
                 docenteNombre: data.nombre_docente,
-                
-                // GRADO 
                 grado_id: data.grado_id,
                 gradoNombre: data.nombre_grado, 
-
-                // SECCIÓN
                 seccion_id: data.seccion_id,
                 seccionNombre: data.nombre_seccion,
-                
-                // MALLA / CURSO
                 malla_curricular_id: data.malla_curricular_id,
                 cursoNombre: data.nombre_curso,
-
-                // OTROS
                 dia_semana: data.dia_semana,
                 hora_inicio: data.hora_inicio,
                 hora_fin: data.hora_fin,
