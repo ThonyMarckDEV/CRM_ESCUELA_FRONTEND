@@ -20,7 +20,8 @@ const Store = () => {
     },
     usuario: {
       username: '', 
-      password: ''
+      password: '',
+      password_confirmation: ''
     },
     contactos: {
       telefono: '', correo: ''

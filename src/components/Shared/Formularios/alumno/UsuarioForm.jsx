@@ -50,19 +50,29 @@ const UsuarioForm = ({ data, handleNestedChange, isEditing = false }) => {
                     </div>
                 </div>
 
-                {/* Confirmar Contraseña */}
+               {/* Confirmar Contraseña */}
                 <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Confirmar Contraseña *</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        Confirmar Contraseña *
+                    </label>
                     <input
                         type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        value={data.usuario.password_confirmation || ''} 
+                        onChange={(e) => handleNestedChange('usuario', 'password_confirmation', e.target.value)}
                         disabled={isEditing && !data.usuario.password}
-                        className={`w-full p-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-black outline-none ${passwordError ? 'border-red-500' : 'border-slate-300'}`}
+                        className={`w-full p-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-black outline-none ${
+                            passwordError ? 'border-red-500' : 'border-slate-300'
+                        }`}
                         placeholder="Repite la contraseña"
+                        required={!isEditing || !!data.usuario.password}
                     />
-                    {passwordError && <p className="text-[10px] text-red-500 mt-1 font-bold italic uppercase">Las contraseñas no coinciden</p>}
+                    {passwordError && (
+                        <p className="text-[10px] text-red-500 mt-1 font-bold italic uppercase">
+                            Las contraseñas no coinciden
+                        </p>
+                    )}
                 </div>
+
             </div>
         </div>
     );
