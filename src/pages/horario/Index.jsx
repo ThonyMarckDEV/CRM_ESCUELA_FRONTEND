@@ -10,6 +10,8 @@ import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import AnioAcademicoSearchSelect from 'components/Shared/Comboboxes/AnioAcademicoSearchSelect';
 import DocenteSearchSelect from 'components/Shared/Comboboxes/DocenteSearchSelect';
 import GradoSearchSelect from 'components/Shared/Comboboxes/GradoSearchSelect';
+import SeccionSearchSelect from 'components/Shared/Comboboxes/SeccionSearchSelect';
+import HorarioSeccionModal from 'components/Shared/Tables/HorarioSeccionModal';
 
 import { 
     CalendarDaysIcon, 
@@ -20,6 +22,7 @@ import {
     MapPinIcon,
     BookOpenIcon
 } from '@heroicons/react/24/outline';
+import { EyeIcon } from 'lucide-react';
 
 const Index = () => {
     const [loading, setLoading] = useState(true);
@@ -29,9 +32,11 @@ const Index = () => {
     const [filters, setFilters] = useState({ 
         anio_academico_id: '', 
         docente_id: '',
-        grado_id: ''
+        grado_id: '',
+        seccion_id: '', seccionNombre: ''
     });
     const filtersRef = useRef(filters);
+    const [showHorarioModal, setShowHorarioModal] = useState(false);
     
     const [alert, setAlert] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, descripcion: '' });
@@ -59,17 +64,19 @@ const Index = () => {
         if (
             filters.anio_academico_id !== filtersRef.current.anio_academico_id || 
             filters.docente_id !== filtersRef.current.docente_id ||
-            filters.grado_id !== filtersRef.current.grado_id
+            filters.grado_id !== filtersRef.current.grado_id ||
+            filters.seccion_id !== filtersRef.current.seccion_id
         ) {
             filtersRef.current = { 
                 ...filtersRef.current, 
                 anio_academico_id: filters.anio_academico_id, 
                 docente_id: filters.docente_id,
-                grado_id: filters.grado_id 
+                grado_id: filters.grado_id ,
+                seccion_id: filters.seccion_id
             };
             fetchHorarios(1); 
         }
-    }, [filters.anio_academico_id, filters.docente_id, filters.grado_id, fetchHorarios]);
+    }, [filters.anio_academico_id, filters.docente_id, filters.grado_id,filters.seccion_id , fetchHorarios]);
 
     const handleConfirmDelete = async () => {
         try {
@@ -167,6 +174,18 @@ const Index = () => {
             render: () => <GradoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
         },
         { 
+            name: 'seccion_id', type: 'custom', colSpan: 'col-span-12 md:col-span-3',
+            render: () => (
+                <SeccionSearchSelect 
+                    form={filters} 
+                    setForm={setFilters} 
+                    isFilter={true} 
+                    gradoId={filters.grado_id} 
+                    disabled={!filters.grado_id} 
+                />
+            )
+        },
+        { 
             name: 'docente_id', 
             type: 'custom', 
             colSpan: 'col-span-12 md:col-span-4',
@@ -174,11 +193,23 @@ const Index = () => {
         }
     ], [filters]);
 
-    return (
+   return (
         <div className="container mx-auto p-6">
             <PageHeader title="Gestión de Horarios" icon={CalendarDaysIcon} buttonText="+ Nuevo Horario" buttonLink="/horario/agregar" />
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
             
+            {filters.seccion_id && (
+                <div className="mb-4 flex justify-end animate-in fade-in slide-in-from-top-2">
+                    <button 
+                        onClick={() => setShowHorarioModal(true)}
+                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-indigo-700 transition-colors"
+                    >
+                        <EyeIcon className="w-5 h-5"/>
+                        Ver Horario de {filters.seccionNombre || 'Sección'}
+                    </button>
+                </div>
+            )}
+
             <Table 
                 columns={columns} 
                 data={horarios} 
@@ -188,7 +219,7 @@ const Index = () => {
                 onFilterChange={(n, v) => setFilters(p => ({...p, [n]: v}))}
                 onFilterSubmit={() => { filtersRef.current = filters; fetchHorarios(1); }}
                 onFilterClear={() => { 
-                    const c = { anio_academico_id: '', docente_id: '', grado_id: '' }; 
+                    const c = { anio_academico_id: '', docente_id: '', grado_id: '', seccion_id: '', seccionNombre: '' }; 
                     setFilters(c); 
                     filtersRef.current = c; 
                     fetchHorarios(1); 
@@ -200,10 +231,20 @@ const Index = () => {
                 }}
             />
 
+            {/* MODAL DEL HORARIO */}
+            {showHorarioModal && (
+                <HorarioSeccionModal 
+                    seccionId={filters.seccion_id}
+                    seccionNombre={filters.seccionNombre}
+                    onClose={() => setShowHorarioModal(false)}
+                />
+            )}
+
+            {/* MODAL DE ELIMINAR */}
             {deleteModal.isOpen && (
                 <ConfirmModal 
                     title="¿Eliminar Horario?" 
-                    message={`Se eliminará la clase del ${deleteModal.descripcion}. Esta acción no se puede deshacer.`}
+                    message={`Se eliminará la clase del ${deleteModal.descripcion}.`}
                     confirmText="Sí, eliminar"
                     onConfirm={handleConfirmDelete} 
                     onCancel={() => setDeleteModal({ isOpen: false, id: null, descripcion: '' })} 

@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
     MapPinIcon, 
     CalculatorIcon,
     ExclamationTriangleIcon,
-    CheckBadgeIcon
+    CheckBadgeIcon,
+    EyeIcon
 } from '@heroicons/react/24/outline';
 
 import AnioAcademicoSearchSelect from 'components/Shared/Comboboxes/AnioAcademicoSearchSelect';
@@ -11,6 +12,7 @@ import DocenteSearchSelect from 'components/Shared/Comboboxes/DocenteSearchSelec
 import GradoSearchSelect from 'components/Shared/Comboboxes/GradoSearchSelect';
 import SeccionSearchSelect from 'components/Shared/Comboboxes/SeccionSearchSelect';
 import MallaSearchSelect from 'components/Shared/Comboboxes/MallaSearchSelect'; 
+import HorarioSeccionModal from 'components/Shared/Tables/HorarioSeccionModal'; 
 
 const HorarioForm = ({ 
     data, 
@@ -21,6 +23,9 @@ const HorarioForm = ({
     security = {} 
 }) => {
     
+    // --- ESTADO PARA EL MODAL ---
+    const [showModal, setShowModal] = useState(false);
+
     const diasLaborables = [
         { id: 1, nombre: 'Lunes' },
         { id: 2, nombre: 'Martes' },
@@ -50,8 +55,6 @@ const HorarioForm = ({
             }
         });
 
-        // Convertimos minutos a Horas (decimales, ej: 1.5 horas)
-        // Ojo: Si tu colegio usa horas pedagógicas de 45min, cambia la división a / 45
         const horasAsignadas = parseFloat((minutosTotales / 60).toFixed(1)); 
         const horasRequeridas = data.horas_semanales || 0;
         const diferencia = horasRequeridas - horasAsignadas;
@@ -105,7 +108,7 @@ const HorarioForm = ({
     return (
         <div className="grid grid-cols-12 gap-6">
             
-            {/* 1. DATOS GENERALES (Igual que antes) */}
+            {/* 1. DATOS GENERALES */}
             <div className="col-span-12">
                 <h3 className="text-sm font-black text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">
                     1. Datos Generales
@@ -137,6 +140,7 @@ const HorarioForm = ({
             </div>
 
             <div className="col-span-12 md:col-span-4">
+
                 <div className={`relative flex items-center ${!data.grado_id ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div className="w-full">
                         <SeccionSearchSelect 
@@ -144,14 +148,28 @@ const HorarioForm = ({
                             setForm={setForm} 
                             gradoId={data.grado_id} 
                             disabled={disabled || !data.grado_id || security.hasAsistencia}
+                            isFilter={false}
                         />
                     </div>
+                </div>
+                
+                {/* --- BOTÓN VER HORARIO (NUEVO) --- */}
+                <div className="flex justify-between items-center mb-1">
+                    {data.seccion_id && (
+                        <button 
+                            type="button"
+                            onClick={() => setShowModal(true)}
+                            className="text-[10px] flex items-center gap-1 bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition-colors font-bold"
+                        >
+                            <EyeIcon className="w-3 h-3"/> Ver Horario
+                        </button>
+                    )}
                 </div>
             </div>
 
             <div className="col-span-12 md:col-span-4">
-                <div className={`relative flex items-center ${!data.grado_id ? 'opacity-50 pointer-events-none' : ''}`}>
-                    <div className="w-full">
+                <div className="relative flex items-center">
+                    <div className={`w-full ${!data.grado_id ? 'opacity-50 pointer-events-none' : ''}`}>
                         <MallaSearchSelect 
                             form={data} 
                             setForm={setForm}
@@ -169,7 +187,7 @@ const HorarioForm = ({
                         2. Configuración de Horario
                     </h3>
                     
-                    {/* WIDGET DE CONTADOR DE HORAS (Solo visible en Creación y si hay curso seleccionado) */}
+                    {/* WIDGET DE CONTADOR DE HORAS */}
                     {!isEdit && data.malla_curricular_id && (
                         <div className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-2 border transition-all duration-300
                             ${calculoHoras.estado === 'incompleto' ? 'bg-orange-50 text-orange-700 border-orange-200' : ''}
@@ -231,7 +249,6 @@ const HorarioForm = ({
                                     const isChecked = !!data.horariosMatrix?.[dia.id];
                                     const diaData = data.horariosMatrix?.[dia.id] || { hora_inicio: '', hora_fin: '' };
                                     
-                                    // Calculo individual por fila
                                     let duracion = '-';
                                     if (diaData.hora_inicio && diaData.hora_fin) {
                                         const [h1, m1] = diaData.hora_inicio.split(':').map(Number);
@@ -306,6 +323,15 @@ const HorarioForm = ({
                         Edición restringida por historial de asistencia.
                     </div>
                 </div>
+            )}
+
+            {/* --- RENDERIZADO DEL MODAL (Condicional) --- */}
+            {showModal && (
+                <HorarioSeccionModal 
+                    seccionId={data.seccion_id}
+                    seccionNombre={data.seccionNombre} // Asegúrate que el SeccionSearchSelect te pase el nombre
+                    onClose={() => setShowModal(false)}
+                />
             )}
         </div>
     );
