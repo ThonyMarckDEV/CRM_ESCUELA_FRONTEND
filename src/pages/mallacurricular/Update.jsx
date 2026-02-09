@@ -43,8 +43,8 @@ const Update = () => {
 
         if (data.tiene_data) setIsLocked(true);
 
-      } catch (e) {
-        setAlert({ type: 'error', message: 'No se pudo cargar la información.' });
+      } catch (err) {
+        setAlert(handleApiError(err , 'No se pudo cargar la información.'));
       } finally {
         setLoading(false);
       }

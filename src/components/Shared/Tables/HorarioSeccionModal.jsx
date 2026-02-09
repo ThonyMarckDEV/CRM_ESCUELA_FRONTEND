@@ -2,11 +2,14 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { getBySeccion, getMiHorario } from 'services/horarioService';
 import { useAuth } from 'context/AuthContext';
 import { XMarkIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+import AlertMessage from 'components/Shared/Errors/AlertMessage';
 
 const HorarioSeccionModal = ({ seccionId, seccionNombre, onClose }) => {
     const { role } = useAuth();
     const [horarioData, setHorarioData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [alert, setAlert] = useState(null);
 
     const dias = [
         { id: 1, nombre: 'Lunes' },
@@ -38,8 +41,8 @@ const HorarioSeccionModal = ({ seccionId, seccionNombre, onClose }) => {
             const data = response.data?.data || response.data || response;
             setHorarioData(Array.isArray(data) ? data : []);
             
-        } catch (error) {
-            console.error("Error cargando horario:", error);
+        } catch (err) {
+            setAlert(handleApiError(err , 'Error cargando horario'));
         } finally {
             setLoading(false);
         }
@@ -107,6 +110,8 @@ const HorarioSeccionModal = ({ seccionId, seccionNombre, onClose }) => {
                         <XMarkIcon className="w-6 h-6 text-slate-400 group-hover:text-white"/>
                     </button>
                 </div>
+
+                <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
                 {/* Content */}
                 <div className="flex-1 overflow-auto p-4 bg-slate-50">

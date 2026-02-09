@@ -170,15 +170,12 @@ const Index = () => {
     return cols;
   }, [isAlumno, isDocente]);
 
-  // Manejo de eliminación (Admin)
   const handleConfirmDelete = async () => {
     setShowConfirm(false); setLoading(true);
     try { await destroy(idToDelete); setAlert({ type: 'success', message: 'Eliminado.' }); fetchMalla(paginationInfo.currentPage); }
     catch (err) { setAlert(handleApiError(err, 'Error eliminar')); } finally { setLoading(false); setIdToDelete(null); }
   };
 
-  // Render "Sin Matrícula" para alumno
-  // Detectamos esto si la carga terminó, no hubo error, pero el array está vacío
   if (isAlumno && !loading && mallas.length === 0) {
       return (
         <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[50vh] text-center animate-in fade-in">
@@ -209,7 +206,7 @@ const Index = () => {
         data={mallas || []}
         loading={loading}
         filterConfig={filterConfig} 
-        filters={isAlumno ? {} : filters} // Alumno no usa filtros visuales
+        filters={isAlumno ? {} : filters}
         
         onFilterChange={(name, val) => setFilters(prev => ({...prev, [name]: val}))}
         onFilterSubmit={() => { filtersRef.current = filters; fetchMalla(1); }}

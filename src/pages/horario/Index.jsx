@@ -15,7 +15,7 @@ import SeccionSearchSelect from 'components/Shared/Comboboxes/SeccionSearchSelec
 import HorarioSeccionModal from 'components/Shared/Tables/HorarioSeccionModal';
 
 import { 
-    CalendarDaysIcon, ClockIcon, PencilSquareIcon, TrashIcon, UserIcon, MapPinIcon, BookOpenIcon, EyeIcon
+    CalendarDaysIcon, ClockIcon, PencilSquareIcon, TrashIcon, UserIcon, BookOpenIcon, EyeIcon
 } from '@heroicons/react/24/outline';
 
 const Index = () => {
@@ -26,7 +26,7 @@ const Index = () => {
     const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1 });
 
     const [filters, setFilters] = useState({ 
-        anio_academico_id: '', docente_id: '', grado_id: '', seccion_id: '', seccionNombre: ''
+        anio_academico_id: '', docente_id: '', grado_id: '', seccion_id: '', seccionNombre: '' , search: ''
     });
     
     const filtersRef = useRef(filters);
@@ -34,16 +34,15 @@ const Index = () => {
     const [alert, setAlert] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, descripcion: '' });
 
+    // --- CARGA DE DATOS ---
     const fetchHorarios = useCallback(async (page = 1) => {
         if (authLoading) return;
-
         setLoading(true);
         try {
             const response = await index(page, filtersRef.current);
             setHorarios(response.data || []);
             setPaginationInfo({
                 currentPage: response.current_page,
-                last_page: response.last_page,
                 totalPages: response.last_page,
             });
         } catch (err) {
@@ -54,14 +53,12 @@ const Index = () => {
     }, [authLoading]);
 
     useEffect(() => {
-        if (!authLoading) {
-            fetchHorarios(1);
-        }
+        if (!authLoading) fetchHorarios(1);
     }, [fetchHorarios, authLoading]);
 
+    // Listener para cambios en filtros (Selects)
     useEffect(() => {
         if (authLoading) return;
-
         const hasChanged = 
             filters.anio_academico_id !== filtersRef.current.anio_academico_id || 
             filters.docente_id !== filtersRef.current.docente_id ||
@@ -86,7 +83,18 @@ const Index = () => {
         }
     };
 
-    // --- COLUMNAS ---
+    // --- LÓGICA AUXILIAR ---
+    const showViewScheduleButton = useCallback(() => {
+        if (role === 'alumno' || role === 'docente') return true;
+        if (filters.seccion_id) return true;
+        return false;
+    }, [role, filters.seccion_id]);
+
+    const getModalSeccionId = () => {
+        return role === 'alumno' ? user.alumno_data?.seccion_id : (filters.seccion_id || null);
+    };
+
+    // --- COLUMNAS DE LA TABLA ---
     const columns = useMemo(() => {
         const cols = [
             {
@@ -96,9 +104,7 @@ const Index = () => {
                         <div className="bg-slate-100 p-2 rounded-full">
                             <UserIcon className="w-5 h-5 text-slate-500" />
                         </div>
-                        <div className="flex flex-col">
-                            <span className="font-bold text-slate-700 text-sm">{row.docente_nombre}</span>
-                        </div>
+                        <span className="font-bold text-slate-700 text-sm">{row.docente_nombre}</span>
                     </div>
                 )
             },
@@ -113,12 +119,6 @@ const Index = () => {
                             <ClockIcon className="w-4 h-4 text-slate-400" />
                             {row.hora_inicio} - {row.hora_fin}
                         </div>
-                        {row.aula && (
-                            <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                                <MapPinIcon className="w-3 h-3" />
-                                {row.aula}
-                            </div>
-                        )}
                     </div>
                 )
             },
@@ -132,10 +132,7 @@ const Index = () => {
                         </div>
                         <div className="flex flex-col pl-6">
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-wide">
-                                {row.grado_nombre}
-                            </span>
-                            <span className="text-[10px] text-slate-400">
-                                Sección: <strong className="text-slate-600">"{row.seccion_nombre}"</strong>
+                                {row.grado_nombre} | <strong className="text-slate-600">"{row.seccion_nombre}"</strong>
                             </span>
                         </div>
                     </div>
@@ -151,7 +148,7 @@ const Index = () => {
                         <Link to={`/horario/editar/${row.id}`} className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors">
                             <PencilSquareIcon className="w-5 h-5" />
                         </Link>
-                        <button onClick={() => setDeleteModal({ isOpen: true, id: row.id, descripcion: `${row.dia_nombre} (${row.hora_inicio} - ${row.hora_fin})` })}
+                        <button onClick={() => setDeleteModal({ isOpen: true, id: row.id, descripcion: `${row.dia_nombre}` })}
                             className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
                             <TrashIcon className="w-5 h-5" />
                         </button>
@@ -162,55 +159,69 @@ const Index = () => {
         return cols;
     }, [role]);
 
-    // --- CONFIGURACIÓN DE FILTROS ---
+    // --- CONFIGURACIÓN DE FILTROS (BOTÓN INCLUIDO) ---
     const filterConfig = useMemo(() => {
-        // ALUMNO: NO VE FILTROS
-        if (role === 'alumno') return [];
-
+        // Buscador base
         const config = [
             { 
-                name: 'anio_academico_id', type: 'custom', colSpan: 'col-span-12 md:col-span-3',
-                render: () => <AnioAcademicoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
-            },
-            { 
-                name: 'grado_id', type: 'custom', colSpan: 'col-span-12 md:col-span-3',
-                render: () => <GradoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
-            },
-            { 
-                name: 'seccion_id', type: 'custom', colSpan: 'col-span-12 md:col-span-3',
-                render: () => (
-                    <SeccionSearchSelect 
-                        form={filters} setForm={setFilters} isFilter={true} 
-                        gradoId={filters.grado_id} disabled={!filters.grado_id} 
-                    />
-                )
+                name: 'search', 
+                type: 'text', 
+                placeholder: 'Buscar profesor, materia o día...',
+                colSpan: role === 'alumno' ? 'col-span-12 md:col-span-9' : 'col-span-12 md:col-span-4', 
             }
         ];
 
-        // DOCENTE: NO VE FILTRO DE DOCENTE (Ya lo sabe el backend)
-        // ADMIN: SÍ LO VE
-        if (role !== 'docente') {
-            config.push({ 
-                name: 'docente_id', type: 'custom', colSpan: 'col-span-12 md:col-span-3',
-                render: () => <DocenteSearchSelect form={filters} setForm={setFilters} isFilter={true} />
+        // Filtros solo para Admin/Docente
+        if (role !== 'alumno') {
+            config.push(
+                { 
+                    name: 'anio_academico_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
+                    render: () => <AnioAcademicoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
+                },
+                { 
+                    name: 'grado_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
+                    render: () => <GradoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
+                },
+                { 
+                    name: 'seccion_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
+                    render: () => (
+                        <SeccionSearchSelect 
+                            form={filters} setForm={setFilters} isFilter={true} 
+                            gradoId={filters.grado_id} disabled={!filters.grado_id} 
+                        />
+                    )
+                }
+            );
+
+            if (role === 'admin') {
+                config.push({ 
+                    name: 'docente_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
+                    render: () => <DocenteSearchSelect form={filters} setForm={setFilters} isFilter={true} />
+                });
+            }
+        }
+
+        // Inserción del Botón "Ver Horario Semanal"
+        if (showViewScheduleButton()) {
+            config.push({
+                name: 'view_schedule_btn',
+                type: 'custom',
+                colSpan: role === 'alumno' ? 'col-span-12 md:col-span-3' : 'col-span-12 md:col-span-2',
+                render: () => (
+                    <button 
+                        type="button"
+                        onClick={() => setShowHorarioModal(true)}
+                        className="flex items-center justify-center gap-2 bg-slate-900 text-white w-full h-[42px] rounded-lg font-bold hover:bg-black transition-all active:scale-95 shadow-md border border-slate-700"
+                    >
+                        <EyeIcon className="w-5 h-5"/>
+                        <span className="text-xs md:text-sm">Ver Horario</span>
+                    </button>
+                )
             });
         }
+
         return config;
-    }, [filters, role]);
-
-    // --- LÓGICA BOTÓN VER HORARIO ---
-    const showViewScheduleButton = () => {
-        if (role === 'alumno') return true; 
-        if (role === 'docente') return true; // El docente siempre puede ver su horario general
-        if (filters.seccion_id) return true; // Admin necesita sección
-        return false;
-    };
-
-    // --- OBTENER ID SECCIÓN PARA MODAL ---
-    const getModalSeccionId = () => {
-    if (role === 'alumno') return user.alumno_data?.seccion_id; 
-        return filters.seccion_id || null; 
-    };
+    }, [filters, role , showViewScheduleButton]);
 
     return (
         <div className="container mx-auto p-6">
@@ -223,21 +234,6 @@ const Index = () => {
             
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
             
-            {showViewScheduleButton() && (
-                <div className="mb-6 flex justify-end animate-in fade-in slide-in-from-top-2">
-                    <button 
-                        onClick={() => setShowHorarioModal(true)}
-                        className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition-all active:scale-95 border border-slate-700"
-                    >
-                        <EyeIcon className="w-5 h-5 text-white"/>
-                        {role === 'alumno'
-                            ? `Ver Horario Semanal` 
-                            : `Ver Horario de ${filters.seccionNombre || 'Sección'}`
-                        }
-                    </button>
-                </div>
-            )}
-
             <Table 
                 columns={columns} 
                 data={horarios} 
@@ -247,10 +243,7 @@ const Index = () => {
                 onFilterChange={(n, v) => setFilters(p => ({...p, [n]: v}))}
                 onFilterSubmit={() => { filtersRef.current = filters; fetchHorarios(1); }}
                 onFilterClear={() => { 
-                    const c = { 
-                        anio_academico_id: '', grado_id: '', seccion_id: '', seccionNombre: '',
-                        docente_id: '' // Ya no necesitamos preservarlo, el backend se encarga
-                    }; 
+                    const c = { anio_academico_id: '', grado_id: '', seccion_id: '', seccionNombre: '', docente_id: '' , search: '' }; 
                     setFilters(c); 
                     filtersRef.current = c; 
                     fetchHorarios(1); 
@@ -265,7 +258,7 @@ const Index = () => {
             {showHorarioModal && (
                 <HorarioSeccionModal 
                     seccionId={getModalSeccionId()}
-                    seccionNombre={role === 'alumno' ? user.alumno_data?.seccion : filters.seccionNombre}
+                    seccionNombre={role === 'alumno' ? user.alumno_data?.seccion : (filters.seccionNombre || 'Sección')}
                     onClose={() => setShowHorarioModal(false)}
                 />
             )}
@@ -273,10 +266,9 @@ const Index = () => {
             {deleteModal.isOpen && (
                 <ConfirmModal 
                     title="¿Eliminar Horario?" 
-                    message={`Se eliminará la clase del ${deleteModal.descripcion}.`}
-                    confirmText="Sí, eliminar"
+                    message={`Se eliminará la clase de los días ${deleteModal.descripcion}.`}
                     onConfirm={handleConfirmDelete} 
-                    onCancel={() => setDeleteModal({ isOpen: false, id: null, descripcion: '' })} 
+                    onCancel={() => setDeleteModal({ isOpen: false, id: null })} 
                 />
             )}
         </div>
