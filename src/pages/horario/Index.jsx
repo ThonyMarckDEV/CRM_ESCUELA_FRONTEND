@@ -6,8 +6,10 @@ import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+
 import AnioAcademicoSearchSelect from 'components/Shared/Comboboxes/AnioAcademicoSearchSelect';
 import DocenteSearchSelect from 'components/Shared/Comboboxes/DocenteSearchSelect';
+import GradoSearchSelect from 'components/Shared/Comboboxes/GradoSearchSelect';
 
 import { 
     CalendarDaysIcon, 
@@ -24,7 +26,11 @@ const Index = () => {
     const [horarios, setHorarios] = useState([]);
     const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1 });
     
-    const [filters, setFilters] = useState({ anio_academico_id: '', docente_id: '' });
+    const [filters, setFilters] = useState({ 
+        anio_academico_id: '', 
+        docente_id: '',
+        grado_id: ''
+    });
     const filtersRef = useRef(filters);
     
     const [alert, setAlert] = useState(null);
@@ -52,12 +58,18 @@ const Index = () => {
     useEffect(() => {
         if (
             filters.anio_academico_id !== filtersRef.current.anio_academico_id || 
-            filters.docente_id !== filtersRef.current.docente_id
+            filters.docente_id !== filtersRef.current.docente_id ||
+            filters.grado_id !== filtersRef.current.grado_id
         ) {
-            filtersRef.current = { ...filtersRef.current, anio_academico_id: filters.anio_academico_id, docente_id: filters.docente_id };
+            filtersRef.current = { 
+                ...filtersRef.current, 
+                anio_academico_id: filters.anio_academico_id, 
+                docente_id: filters.docente_id,
+                grado_id: filters.grado_id 
+            };
             fetchHorarios(1); 
         }
-    }, [filters.anio_academico_id, filters.docente_id, fetchHorarios]);
+    }, [filters.anio_academico_id, filters.docente_id, filters.grado_id, fetchHorarios]);
 
     const handleConfirmDelete = async () => {
         try {
@@ -81,7 +93,6 @@ const Index = () => {
                     </div>
                     <div className="flex flex-col">
                         <span className="font-bold text-slate-700 text-sm">{row.docente_nombre}</span>
-                        {/* Opcional: Mostrar aula aquí si prefieres */}
                     </div>
                 </div>
             )
@@ -110,20 +121,14 @@ const Index = () => {
             header: 'Materia / Grupo',
             render: (row) => (
                 <div className="flex flex-col gap-1">
-                    {/* Nombre del Curso */}
                     <div className="flex items-center gap-2">
                         <BookOpenIcon className="w-4 h-4 text-slate-400"/>
                         <span className="text-sm font-bold text-slate-700">{row.curso_nombre}</span>
                     </div>
-                    
-                    {/* GRADO Y SECCIÓN */}
                     <div className="flex flex-col pl-6">
-                        {/* Nombre del Grado (Arriba) */}
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-wide">
                             {row.grado_nombre}
                         </span>
-                        
-                        {/* Nombre de la Sección (Abajo) */}
                         <span className="text-[10px] text-slate-400">
                             Sección: <strong className="text-slate-600">"{row.seccion_nombre}"</strong>
                         </span>
@@ -135,23 +140,11 @@ const Index = () => {
             header: 'Acciones',
             render: (row) => (
                 <div className="flex gap-2">
-                    <Link 
-                        to={`/horario/editar/${row.id}`} 
-                        className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Editar Horario"
-                    >
+                    <Link to={`/horario/editar/${row.id}`} className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors">
                         <PencilSquareIcon className="w-5 h-5" />
                     </Link>
-
-                    <button 
-                        onClick={() => setDeleteModal({ 
-                            isOpen: true, 
-                            id: row.id, 
-                            descripcion: `${row.dia_nombre} (${row.hora_inicio} - ${row.hora_fin})` 
-                        })}
-                        className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Eliminar Horario"
-                    >
+                    <button onClick={() => setDeleteModal({ isOpen: true, id: row.id, descripcion: `${row.dia_nombre} (${row.hora_inicio} - ${row.hora_fin})` })}
+                        className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
                         <TrashIcon className="w-5 h-5" />
                     </button>
                 </div>
@@ -159,6 +152,7 @@ const Index = () => {
         }
     ], []);
 
+    // --- ACTUALIZADO: Configuración de filtros ---
     const filterConfig = useMemo(() => [
         { 
             name: 'anio_academico_id', 
@@ -167,9 +161,15 @@ const Index = () => {
             render: () => <AnioAcademicoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
         },
         { 
+            name: 'grado_id', // <--- Filtro de Grado
+            type: 'custom', 
+            colSpan: 'col-span-12 md:col-span-3',
+            render: () => <GradoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
+        },
+        { 
             name: 'docente_id', 
             type: 'custom', 
-            colSpan: 'col-span-12 md:col-span-6',
+            colSpan: 'col-span-12 md:col-span-4',
             render: () => <DocenteSearchSelect form={filters} setForm={setFilters} isFilter={true} />
         }
     ], [filters]);
@@ -188,7 +188,7 @@ const Index = () => {
                 onFilterChange={(n, v) => setFilters(p => ({...p, [n]: v}))}
                 onFilterSubmit={() => { filtersRef.current = filters; fetchHorarios(1); }}
                 onFilterClear={() => { 
-                    const c = { anio_academico_id: '', docente_id: '' }; 
+                    const c = { anio_academico_id: '', docente_id: '', grado_id: '' }; 
                     setFilters(c); 
                     filtersRef.current = c; 
                     fetchHorarios(1); 

@@ -12,7 +12,8 @@ export const index = async (page = 1, filters = {}) => {
     docente: filters.docente_id || '',
     anio: filters.anio_academico_id || '',
     seccion: filters.seccion_id || '',
-    dia: filters.dia_semana || ''
+    dia: filters.dia_semana || '',
+    grado: filters.grado_id || '' 
   });
 
   const response = await fetchWithAuth(`${BASE_URL}/index?${params.toString()}`, { 

@@ -11,14 +11,14 @@ const Store = () => {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({ 
-    anio_academico_id: '', anioNombre: '',
-    docente_id: '', docenteNombre: '',
-    seccion_id: '', seccionNombre: '',
+    anio_academico_id: '', 
+    docente_id: '', 
+    seccion_id: '', 
     grado_id: '',
-    malla_curricular_id: '', cursoNombre: '',
-    dia_semana: '',
-    hora_inicio: '',
-    hora_fin: '',
+    malla_curricular_id: '', 
+    
+    horariosMatrix: {},
+    
     aula_fisica: ''
   });
   
@@ -30,27 +30,46 @@ const Store = () => {
     setLoading(true);
     setAlert(null);
 
-    // Validaciones manuales básicas antes de enviar
-    if (!formData.docente_id || !formData.malla_curricular_id || !formData.seccion_id || !formData.dia_semana || !formData.hora_inicio || !formData.hora_fin) {
-        setAlert({ type: 'error', message: 'Complete los campos obligatorios (*).' });
+    // 1. Validar campos generales
+    if (!formData.docente_id || !formData.malla_curricular_id || !formData.seccion_id) {
+        setAlert({ type: 'error', message: 'Complete los campos generales.' });
         setLoading(false);
         return;
     }
 
-    // Validación de horas lógica
-    if (formData.hora_inicio >= formData.hora_fin) {
-        setAlert({ type: 'error', message: 'La hora de fin debe ser mayor a la hora de inicio.' });
+    // 2. Convertir Matriz a Array para el Backend
+    const horariosArray = Object.entries(formData.horariosMatrix).map(([diaId, horas]) => ({
+        dia_semana: parseInt(diaId),
+        hora_inicio: horas.hora_inicio,
+        hora_fin: horas.hora_fin
+    }));
+
+    // 3. Validar que haya días y que tengan hora
+    if (horariosArray.length === 0) {
+        setAlert({ type: 'error', message: 'Seleccione al menos un día.' });
         setLoading(false);
         return;
     }
+
+    const horarioIncompleto = horariosArray.find(h => !h.hora_inicio || !h.hora_fin);
+    if (horarioIncompleto) {
+        setAlert({ type: 'error', message: 'Complete las horas de inicio y fin para todos los días seleccionados.' });
+        setLoading(false);
+        return;
+    }
+
+    // 4. Preparar Payload Final
+    const payload = {
+        ...formData,
+        horarios: horariosArray // Enviamos el array transformado
+    };
 
     try {
-      await store(formData);
-      setAlert({ type: 'success', message: 'Horario asignado exitosamente.' });
+      await store(payload);
+      setAlert({ type: 'success', message: 'Horarios asignados exitosamente.' });
       setTimeout(() => navigate('/horario/listar'), 1500);
     } catch (error) {
-      // Aquí el backend devuelve 409 si hay cruce, handleApiError lo maneja
-      setAlert(handleApiError(error, 'Error al registrar horario'));
+      setAlert(handleApiError(error, 'Error al registrar'));
       setLoading(false);
     }
   };
@@ -72,7 +91,7 @@ const Store = () => {
                 setForm={setFormData} 
             />
             <button type="submit" disabled={loading} className="mt-8 w-full bg-black text-white py-3 rounded-lg font-black uppercase hover:bg-zinc-800 disabled:opacity-50 transition-all shadow-lg">
-                {loading ? 'Validando y Guardando...' : 'Asignar Horario'}
+                {loading ? 'Validando y Guardando...' : 'Asignar Horarios'}
             </button>
         </form>
       </div>

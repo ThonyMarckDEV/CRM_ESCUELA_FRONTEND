@@ -86,7 +86,8 @@ const MallaSearchSelect = ({ form, setForm, gradoId, disabled, isFilter = false 
         setForm(prev => ({ 
             ...prev, 
             malla_curricular_id: mallaItem.id, 
-            cursoNombre: nombreCurso
+            cursoNombre: nombreCurso,
+            horas_semanales: mallaItem.horas_semanales
         }));
         setShowSuggestions(false);
     };
@@ -94,7 +95,7 @@ const MallaSearchSelect = ({ form, setForm, gradoId, disabled, isFilter = false 
     const handleClear = (e) => {
         e.stopPropagation();
         setInputValue('');
-        setForm(prev => ({ ...prev, malla_curricular_id: '', cursoNombre: '' }));
+        setForm(prev => ({ ...prev, malla_curricular_id: '', cursoNombre: '', horas_semanales: 0 }));
         if (showSuggestions && gradoId) fetchCursos('');
     };
 
