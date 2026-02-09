@@ -161,7 +161,6 @@ const Index = () => {
 
     // --- CONFIGURACIÓN DE FILTROS (BOTÓN INCLUIDO) ---
     const filterConfig = useMemo(() => {
-        // Buscador base
         const config = [
             { 
                 name: 'search', 
@@ -171,13 +170,9 @@ const Index = () => {
             }
         ];
 
-        // Filtros solo para Admin/Docente
         if (role !== 'alumno') {
+            // Filtros comunes para Admin y Docente
             config.push(
-                { 
-                    name: 'anio_academico_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
-                    render: () => <AnioAcademicoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
-                },
                 { 
                     name: 'grado_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
                     render: () => <GradoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
@@ -193,15 +188,21 @@ const Index = () => {
                 }
             );
 
+            // Filtros EXCLUSIVOS del Administrador
             if (role === 'admin') {
-                config.push({ 
-                    name: 'docente_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
-                    render: () => <DocenteSearchSelect form={filters} setForm={setFilters} isFilter={true} />
-                });
+                config.push(
+                    { 
+                        name: 'anio_academico_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
+                        render: () => <AnioAcademicoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
+                    },
+                    { 
+                        name: 'docente_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
+                        render: () => <DocenteSearchSelect form={filters} setForm={setFilters} isFilter={true} />
+                    }
+                );
             }
         }
 
-        // Inserción del Botón "Ver Horario Semanal"
         if (showViewScheduleButton()) {
             config.push({
                 name: 'view_schedule_btn',
@@ -211,7 +212,7 @@ const Index = () => {
                     <button 
                         type="button"
                         onClick={() => setShowHorarioModal(true)}
-                        className="flex items-center justify-center gap-2 bg-slate-900 text-white w-full h-[42px] rounded-lg font-bold hover:bg-black transition-all active:scale-95 shadow-md border border-slate-700"
+                        className="flex-1 px-4 py-2 bg-black text-white rounded-md hover:bg-zinc-800 transition-colors text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2 h-[38px]"
                     >
                         <EyeIcon className="w-5 h-5"/>
                         <span className="text-xs md:text-sm">Ver Horario</span>
@@ -221,7 +222,7 @@ const Index = () => {
         }
 
         return config;
-    }, [filters, role , showViewScheduleButton]);
+    }, [filters, role, showViewScheduleButton]);
 
     return (
         <div className="container mx-auto p-6">
