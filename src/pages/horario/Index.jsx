@@ -201,17 +201,15 @@ const Index = () => {
     // --- LÓGICA BOTÓN VER HORARIO ---
     const showViewScheduleButton = () => {
         if (role === 'alumno') return true; 
-        if (filters.seccion_id) return true;
+        if (role === 'docente') return true; // El docente siempre puede ver su horario general
+        if (filters.seccion_id) return true; // Admin necesita sección
         return false;
     };
 
     // --- OBTENER ID SECCIÓN PARA MODAL ---
     const getModalSeccionId = () => {
-        if (role === 'alumno') {
-            // ID desde /me (AuthContext)
-            return user.alumno_data?.seccion_id; 
-        }
-        return filters.seccion_id;
+    if (role === 'alumno') return user.alumno_data?.seccion_id; 
+        return filters.seccion_id || null; 
     };
 
     return (
@@ -226,14 +224,14 @@ const Index = () => {
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
             
             {showViewScheduleButton() && (
-                <div className="mb-4 flex justify-end animate-in fade-in slide-in-from-top-2">
+                <div className="mb-6 flex justify-end animate-in fade-in slide-in-from-top-2">
                     <button 
                         onClick={() => setShowHorarioModal(true)}
-                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-indigo-700 transition-colors"
+                        className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition-all active:scale-95 border border-slate-700"
                     >
-                        <EyeIcon className="w-5 h-5"/>
-                        {role === 'alumno' 
-                            ? `Ver Horario Semanal Completo (${user.alumno_data?.seccion || ''})` 
+                        <EyeIcon className="w-5 h-5 text-white"/>
+                        {role === 'alumno'
+                            ? `Ver Horario Semanal` 
                             : `Ver Horario de ${filters.seccionNombre || 'Sección'}`
                         }
                     </button>

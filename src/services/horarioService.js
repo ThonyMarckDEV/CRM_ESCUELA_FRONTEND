@@ -58,8 +58,12 @@ export const destroy = async (id) => {
     return handleResponse(response);
 };
 
-
 export const getBySeccion = async (seccionId) => {
   const response = await fetchWithAuth(`${BASE_URL}/seccion/${seccionId}`, { method: 'GET' });
+  return handleResponse(response);
+};
+
+export const getMiHorario = async () => {
+  const response = await fetchWithAuth(`${BASE_URL}/mi-horario`, { method: 'GET' });
   return handleResponse(response);
 };
