@@ -43,7 +43,6 @@ const Index = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [idToDelete, setIdToDelete] = useState(null);
 
-
   const fetchMalla = useCallback(async (page = 1) => {
     if (!user) return; 
 
@@ -58,7 +57,7 @@ const Index = () => {
             setLoading(false);
             return;
         }
-        response = await indexAlumno(alumnoGradoId);
+        response = await indexAlumno(page, alumnoGradoId);
       } else {
         response = await index(page, filtersRef.current);
       }
@@ -76,6 +75,7 @@ const Index = () => {
       setLoading(false);
     }
   }, [user, isAlumno, alumnoGradoId]);
+
   useEffect(() => { fetchMalla(1); }, [fetchMalla]);
 
   useEffect(() => {

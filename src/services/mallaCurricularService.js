@@ -17,10 +17,16 @@ export const index = async (page = 1, filters = {}) => {
   return handleResponse(response);
 };
 
-export const indexAlumno = async (gradoId) => {
-  const response = await fetchWithAuth(`${BASE_URL}/index?grado=${gradoId}`, { 
+export const indexAlumno = async (page = 1, gradoId) => {
+  const params = new URLSearchParams({
+    page: page,
+    grado: gradoId
+  });
+
+  const response = await fetchWithAuth(`${BASE_URL}/index?${params.toString()}`, { 
     method: 'GET' 
   });
+  
   return handleResponse(response);
 };
 

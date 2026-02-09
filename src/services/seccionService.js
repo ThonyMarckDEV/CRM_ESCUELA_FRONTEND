@@ -9,7 +9,8 @@ export const index = async (page = 1, filters = {}) => {
   const params = new URLSearchParams({
     page: page,
     search: filters.search || '', 
-    grado: filters.grado_id || ''
+    grado: filters.grado_id || '',
+    estado: filters.estado || '',
   });
 
   const response = await fetchWithAuth(`${BASE_URL}/index?${params.toString()}`, { method: 'GET' });

@@ -143,7 +143,7 @@ const Index = () => {
           <div className="flex flex-col">
             <span className="font-bold text-slate-800 text-sm">{row.nombre_completo}</span>
             <span className="text-xs text-slate-500 flex items-center gap-1">
-                <UserIcon className="w-3 h-3"/> {row.usuario || 'Sin usuario'}
+                <UserIcon className="w-3 h-3"/> {row.usuario?.username || 'Sin usuario'}
             </span>
           </div>
         </div>
