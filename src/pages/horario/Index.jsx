@@ -229,7 +229,7 @@ const Index = () => {
             <PageHeader 
                 title={role === 'alumno' ? "Mi Horario de Clases" : "Gestión de Horarios"} 
                 icon={CalendarDaysIcon} 
-                buttonText={role !== 'alumno' ? "+ Nuevo Horario" : null} 
+                buttonText={role !== 'alumno' && role !== 'docente' ? "+ Nuevo Horario" : null} 
                 buttonLink="/horario/agregar" 
             />
             
