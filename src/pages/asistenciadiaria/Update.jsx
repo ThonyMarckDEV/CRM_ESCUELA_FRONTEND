@@ -72,9 +72,8 @@ const Update = () => {
                                 className="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-black outline-none"
                             >
                                 <option value="1">Presente</option>
-                                <option value="3">Tardanza</option>
-                                <option value="4">Justificado</option>
-                                <option value="2">Falta</option>
+                                <option value="2">Tardanza</option>
+                                <option value="3">Justificado</option>
                             </select>
                         </div>
 
