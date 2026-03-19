@@ -78,6 +78,11 @@ import AgregarHorario from 'pages/horario/Store';
 import EditarHorario  from 'pages/horario/Update';
 import ListarHorarios from 'pages/horario/Index';
 
+// UI ASISTENCIA DIARIA
+import ListarAsistenciasDiarias from 'pages/asistenciadiaria/Index';
+import AgregarAsistenciaDiaria from 'pages/asistenciadiaria/Store';
+import EditarAsistenciaDiaria from 'pages/asistenciadiaria/Update';
+
 
 
 // Utilities
@@ -96,7 +101,7 @@ function AppContent() {
         element={
           <ProtectedRoute 
             element={<SidebarLayout />} 
-            allowedRoles={['superadmin', 'admin', 'alumno' , 'docente' , 'cajero' ]} 
+            allowedRoles={['superadmin', 'admin', 'alumno' , 'docente' , 'cajero' , 'portero' ]} 
           />
         }
       >
@@ -231,6 +236,16 @@ function AppContent() {
         <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin' , 'cajero']} />}>
             <Route path="/pago/agregar" element={<AgregarPago />} />
             <Route path="/pago/listar" element={<ListarPagos />}  />
+        </Route>
+
+        {/* =======================================================
+            MÓDULO: ASISTENCIA DIARIA
+           ======================================================= */}
+
+        <Route element={<ProtectedRoute element={<Outlet />} />}>
+            <Route path="/asistencia/diaria/agregar" element={<AgregarAsistenciaDiaria />}  allowedRoles={['portero']}/>
+            <Route path="/asistencia/diaria/editar/:id" element={<EditarAsistenciaDiaria />} allowedRoles={['portero']}/>
+            <Route path="/asistencia/diaria/listar" element={<ListarAsistenciasDiarias />} allowedRoles={['portero']}/>
         </Route>
 
 

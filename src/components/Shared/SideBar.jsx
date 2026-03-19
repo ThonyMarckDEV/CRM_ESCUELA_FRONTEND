@@ -13,6 +13,7 @@ import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { BookIcon, CalendarArrowDown, GraduationCapIcon, Section, UserSquare2Icon } from 'lucide-react';
 import { useAuth } from 'context/AuthContext';
 import { FaCertificate, FaLevelUpAlt, FaMoneyBillWaveAlt, FaMoneyCheck, FaUserGraduate } from 'react-icons/fa';
+import { QrCodeIcon } from '@heroicons/react/24/outline';
 
 // =======================================================================
 // CONFIGURACIÓN MAESTRA DEL MENÚ
@@ -234,6 +235,23 @@ const MASTER_MENU = [
                 link: '/horario/listar', 
                 allowedRoles: ['docente', 'alumno']
             },
+        ],
+    },
+    { 
+        section: 'Asistencia Diaria', 
+        icon: QrCodeIcon, 
+        allowedRoles: ['portero'], 
+        subs: [
+            { 
+                name: 'Listar Asistencias', 
+                link: '/asistencia/diaria/listar', 
+                allowedRoles: ['portero']
+            },
+            { 
+                name: 'Registro Manual', 
+                link: '/asistencia/diaria/agregar',
+                allowedRoles: ['portero'] 
+            }
         ],
     },
 ];
