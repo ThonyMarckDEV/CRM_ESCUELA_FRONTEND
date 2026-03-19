@@ -7,7 +7,7 @@ import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import AlumnoSearchSelect from 'components/Shared/Comboboxes/AlumnoSearchSelect';
 import { 
     ClipboardDocumentCheckIcon, DocumentCheckIcon, QrCodeIcon, 
-    HandRaisedIcon, CheckCircleIcon, ClockIcon, XCircleIcon, 
+    HandRaisedIcon, CheckCircleIcon, ClockIcon, 
     DocumentTextIcon, ExclamationTriangleIcon 
 } from '@heroicons/react/24/outline';
 

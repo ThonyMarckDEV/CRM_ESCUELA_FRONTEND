@@ -254,7 +254,7 @@ const MASTER_MENU = [
                 allowedRoles: ['portero']
             },
             { 
-                name: 'Registro Manual', 
+                name: 'Registro', 
                 link: '/asistencia/diaria/agregar',
                 allowedRoles: ['portero'] 
             }
