@@ -94,10 +94,6 @@ const Index = () => {
                         <div className="bg-white p-4 rounded-xl shadow-2xl relative z-10">
                             <QRCode value={qrEncriptado} size={180} />
                         </div>
-                        
-                        <p className="mt-6 text-xs text-slate-500 uppercase tracking-widest relative z-10 font-bold">
-                            ID: {datos.codigo_estudiante}
-                        </p>
                     </div>
                 )}
             </div>
