@@ -246,12 +246,12 @@ const MASTER_MENU = [
     { 
         section: 'Asistencia Diaria', 
         icon: QrCodeIcon, 
-        allowedRoles: ['portero'], 
+        allowedRoles: ['portero','superadmin'], 
         subs: [
             { 
                 name: 'Listar Asistencias', 
                 link: '/asistencia/diaria/listar', 
-                allowedRoles: ['portero']
+                allowedRoles: ['portero','superadmin']
             },
             { 
                 name: 'Registro', 

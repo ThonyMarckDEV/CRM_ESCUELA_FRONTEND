@@ -7,11 +7,12 @@ export const useUpdate = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [alert, setAlert] = useState(null);
-    const [alumnoNombre, setAlumnoNombre] = useState(''); // Para mostrar a quién editamos
+    const [loading, setLoading]   = useState(true);
+    const [saving, setSaving]     = useState(false);
+    const [alert, setAlert]       = useState(null);
+    const [alumnoNombre, setAlumnoNombre] = useState('');
 
+    // ✅ FIX 1: formData con estado inicial (faltaba useState)
     const [formData, setFormData] = useState({
         matricula_id: '',
         fecha: '',
@@ -24,21 +25,24 @@ export const useUpdate = () => {
         try {
             const response = await show(id);
             const data = response.data || response;
-            
-            // Asumiendo que el backend envía la relación matricula.alumno
-            const nombreCompleto = data.matricula?.alumno 
+
+            const nombreCompleto = data.matricula?.alumno
                 ? `${data.matricula.alumno.nombre} ${data.matricula.alumno.apellidoPaterno}`
                 : `Matrícula #${data.matricula_id}`;
-            
+
             setAlumnoNombre(nombreCompleto);
+
+            // ✅ FIX 2: fechaLimpia DENTRO de loadAsistencia, donde data ya existe
+            const fechaLimpia = data.fecha ? data.fecha.split('T')[0] : '';
 
             setFormData({
                 matricula_id: data.matricula_id,
-                fecha: data.fecha.split('T')[0], // Asegurar formato YYYY-MM-DD
-                hora_ingreso: data.hora_ingreso ? data.hora_ingreso.substring(0, 5) : '', // HH:MM
-                estado: data.estado.toString(),
-                observacion: data.observacion || ''
+                fecha:        fechaLimpia,
+                hora_ingreso: data.hora_ingreso ? data.hora_ingreso.substring(0, 5) : '',
+                estado:       data.estado ? data.estado.toString() : '1',
+                observacion:  data.observacion || ''
             });
+
         } catch (err) {
             setAlert(handleApiError(err, 'No se pudo cargar la asistencia.'));
         } finally {

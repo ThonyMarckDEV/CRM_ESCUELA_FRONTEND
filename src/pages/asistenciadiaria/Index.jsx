@@ -1,26 +1,39 @@
 import React, { useMemo } from 'react';
 import { useIndex } from './hooks/useIndex';
+import { Link } from 'react-router-dom';
+import { useAuth } from 'context/AuthContext';
 import Table from 'components/Shared/Tables/Table';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
-import { QrCodeIcon, TrashIcon, ClockIcon, AcademicCapIcon, IdentificationIcon } from '@heroicons/react/24/outline';
+import AlumnoSearchSelect from 'components/Shared/Comboboxes/AlumnoSearchSelect';
+import { QrCodeIcon, TrashIcon, ClockIcon, AcademicCapIcon, IdentificationIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 
 const Index = () => {
     const {
         loading, asistencias, paginationInfo, filters, alert, deleteModal,
         setAlert, setDeleteModal, fetchAsistencias, handleFilterChange,
-        handleFilterSubmit, handleClearFilters, handleDeleteConfirm
+        handleFilterSubmit, handleClearFilters, handleDeleteConfirm,
+        // ✅ Necesitamos setFilters directo para el combobox de alumno
+        setFilters
     } = useIndex();
 
-    // Configuración de los filtros de la tabla
+    const { role } = useAuth();
+    const isSuperAdmin = role === 'superadmin';
+
     const filterConfig = useMemo(() => [
-        { 
-            name: 'search', 
-            type: 'text', 
-            label: 'Buscar Alumno', 
-            placeholder: 'Nombre o DNI...', 
-            colSpan: 'col-span-12 md:col-span-6'
+        // ✅ Combobox de Alumno en lugar del input de texto
+        {
+            name: 'alumno_id',
+            type: 'custom',
+            colSpan: 'col-span-12 md:col-span-5',
+            render: () => (
+                <AlumnoSearchSelect
+                    form={filters}
+                    setForm={setFilters}
+                    isFilter={true}
+                />
+            )
         },
         { 
             name: 'fecha', 
@@ -32,7 +45,7 @@ const Index = () => {
             name: 'estado',
             type: 'select', 
             label: 'Estado', 
-            colSpan: 'col-span-12 md:col-span-3',
+            colSpan: 'col-span-12 md:col-span-4',
             options: [
                 { value: '', label: 'Todos' }, 
                 { value: '1', label: 'Presente' }, 
@@ -40,102 +53,106 @@ const Index = () => {
                 { value: '3', label: 'Justificado' },
             ] 
         }
-    ], []);
+    // ✅ filters y setFilters como dependencias para que el combobox vea el estado actualizado
+    ], [filters, setFilters]);
 
-    // Configuración de las columnas
-    const columns = useMemo(() => [
-        {
-            header: 'Fecha y Hora',
-            render: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-bold text-slate-800 text-sm">{row.fecha}</span>
-                    <span className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 font-medium">
-                        <ClockIcon className="w-3.5 h-3.5 text-slate-400" /> 
-                        {row.hora_ingreso !== '-' ? `${row.hora_ingreso} hrs` : <span className="italic text-slate-400">Sin registro</span>}
-                    </span>
-                </div>
-            )
-        },
-        {
-            header: 'Información del Estudiante',
-            render: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-black text-slate-900 text-sm uppercase mb-1">
-                        {row.alumno_nombre}
-                    </span>
-                    
-                    {/* Fila de Badges */}
-                    <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                        
-                        {/* DNI */}
-                        <span className="flex items-center gap-1 text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold border border-slate-200">
-                            <IdentificationIcon className="w-3 h-3" /> DNI: {row.alumno_dni}
-                        </span>
-                        
-                        {/* Código de Estudiante */}
-                        <span className="flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-bold border border-blue-100">
-                            COD: {row.alumno_codigo}
-                        </span>
-
-                        {/* Grado y Sección */}
-                        <span className="flex items-center gap-1 text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-bold border border-purple-100">
-                            <AcademicCapIcon className="w-3 h-3" /> {row.grado_seccion}
-                        </span>
-
-                        {/* ID Matricula (Gris chiquito al final) */}
-                        <span className="text-[10px] text-slate-400" title="ID de Matrícula Interno">
-                            #M{row.matricula_id}
+    const columns = useMemo(() => {
+        const baseColumns = [
+            {
+                header: 'Fecha y Hora',
+                render: (row) => (
+                    <div className="flex flex-col">
+                        <span className="font-bold text-slate-800 text-sm">{row.fecha}</span>
+                        <span className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 font-medium">
+                            <ClockIcon className="w-3.5 h-3.5 text-slate-400" /> 
+                            {row.hora_ingreso !== '-' ? `${row.hora_ingreso} hrs` : <span className="italic text-slate-400">Sin registro</span>}
                         </span>
                     </div>
-                </div>
-            )
-        },
-        {
-            header: 'Estado',
-            render: (row) => {
-                const badgeColors = {
-                    1: 'bg-green-100 text-green-700 border border-green-200',   // Presente
-                    2: 'bg-yellow-100 text-yellow-700 border border-yellow-200', // Tardanza
-                    3: 'bg-blue-100 text-blue-700 border border-blue-200'      // Justificado
-                };
-                return (
-                    <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${badgeColors[row.estado_id] || 'bg-slate-100 text-slate-600'}`}>
-                        {row.estado_texto}
+                )
+            },
+            {
+                header: 'Información del Estudiante',
+                render: (row) => (
+                    <div className="flex flex-col">
+                        <span className="font-black text-slate-900 text-sm uppercase mb-1">
+                            {row.alumno_nombre}
+                        </span>
+                        <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                            <span className="flex items-center gap-1 text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold border border-slate-200">
+                                <IdentificationIcon className="w-3 h-3" /> DNI: {row.alumno_dni}
+                            </span>
+                            <span className="flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-bold border border-blue-100">
+                                COD: {row.alumno_codigo}
+                            </span>
+                            <span className="flex items-center gap-1 text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-bold border border-purple-100">
+                                <AcademicCapIcon className="w-3 h-3" /> {row.grado_seccion}
+                            </span>
+                            <span className="text-[10px] text-slate-400" title="ID de Matrícula Interno">
+                                #M{row.matricula_id}
+                            </span>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                header: 'Estado',
+                render: (row) => {
+                    const badgeColors = {
+                        1: 'bg-green-100 text-green-700 border border-green-200',
+                        2: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+                        3: 'bg-blue-100 text-blue-700 border border-blue-200'
+                    };
+                    return (
+                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${badgeColors[row.estado_id] || 'bg-slate-100 text-slate-600'}`}>
+                            {row.estado_texto}
+                        </span>
+                    );
+                }
+            },
+            {
+                header: 'Observación',
+                render: (row) => (
+                    <span className={`text-xs ${row.observacion ? 'text-slate-600 font-medium' : 'text-slate-400 italic'}`}>
+                        {row.observacion || 'Ninguna'}
                     </span>
-                );
+                )
             }
-        },
-        {
-            header: 'Observación',
-            render: (row) => (
-                <span className={`text-xs ${row.observacion ? 'text-slate-600 font-medium' : 'text-slate-400 italic'}`}>
-                    {row.observacion || 'Ninguna'}
-                </span>
-            )
-        },
-        {
-            header: 'Acciones',
-            render: (row) => (
-                <div className="flex items-center gap-2">
-                    <button 
-                        onClick={() => setDeleteModal({ isOpen: true, id: row.id })} 
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                        title="Eliminar registro"
-                    >
-                        <TrashIcon className="w-5 h-5" />
-                    </button>
-                </div>
-            )
+        ];
+
+        if (isSuperAdmin) {
+            baseColumns.push({
+                header: 'Acciones',
+                render: (row) => (
+                    <div className="flex items-center gap-3">
+                        <Link 
+                            to={`/asistencia/diaria/editar/${row.id}`}
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            title="Editar registro"
+                        >
+                            <PencilSquareIcon className="w-5 h-5" />
+                        </Link>
+                        <button 
+                            onClick={() => setDeleteModal({ isOpen: true, id: row.id })} 
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            title="Eliminar registro"
+                        >
+                            <TrashIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                )
+            });
         }
-    ], [setDeleteModal]);
+
+        return baseColumns;
+    }, [isSuperAdmin, setDeleteModal]);
 
     return (
         <div className="container mx-auto p-6">
             <PageHeader 
                 title="Reporte de Asistencias" 
                 icon={QrCodeIcon} 
-                buttonText="+ Escáner de Ingreso" 
-                buttonLink="/asistencia/diaria/agregar" 
+                buttonText={role === 'portero' ? "+ Escáner de Ingreso" : "+ Registro Manual"} 
+                buttonLink="/asistencia/diaria/agregar"
             />
             
             <AlertMessage 

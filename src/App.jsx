@@ -248,8 +248,8 @@ function AppContent() {
 
         <Route element={<ProtectedRoute element={<Outlet />} />}>
             <Route path="/asistencia/diaria/agregar" element={<AgregarAsistenciaDiaria />}  allowedRoles={['portero']}/>
-            <Route path="/asistencia/diaria/editar/:id" element={<EditarAsistenciaDiaria />} allowedRoles={['portero']}/>
-            <Route path="/asistencia/diaria/listar" element={<ListarAsistenciasDiarias />} allowedRoles={['portero']}/>
+            <Route path="/asistencia/diaria/editar/:id" element={<EditarAsistenciaDiaria />} allowedRoles={['superadmin']}/>
+            <Route path="/asistencia/diaria/listar" element={<ListarAsistenciasDiarias />} allowedRoles={['portero','superadmin']}/>
         </Route>
 
         {/* =======================================================
