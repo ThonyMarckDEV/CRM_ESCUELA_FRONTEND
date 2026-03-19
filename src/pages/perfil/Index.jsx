@@ -1,19 +1,44 @@
-import React from 'react';
+import React, { useRef } from 'react'; // Importamos useRef
 import { useIndex } from './hooks/useIndex';
 import { Link } from 'react-router-dom';
 import QRCode from 'react-qr-code';
+import { toPng } from 'html-to-image'; // Importamos el conversor
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
-import { UserIcon, IdentificationIcon, PencilSquareIcon, QrCodeIcon } from '@heroicons/react/24/outline';
+import { 
+    UserIcon, 
+    IdentificationIcon, 
+    PencilSquareIcon, 
+    QrCodeIcon, 
+    ArrowDownTrayIcon // Icono de descarga
+} from '@heroicons/react/24/outline';
 
 const Index = () => {
     const { loading, perfil, alert, setAlert, qrEncriptado } = useIndex();
+    const carnetRef = useRef(null); // Referencia para el área del carnet
 
     if (loading) return <LoadingScreen />;
     if (!perfil) return null;
 
     const datos = perfil.datos;
+
+    // Función para procesar la imagen y descargar
+    const downloadCarnet = () => {
+        if (carnetRef.current === null) return;
+
+        // Convertimos el div a PNG
+        toPng(carnetRef.current, { cacheBust: true, pixelRatio: 2 }) // pixelRatio 2 para mejor calidad
+            .then((dataUrl) => {
+                const link = document.createElement('a');
+                link.download = `Carnet-${datos.dni}.png`;
+                link.href = dataUrl;
+                link.click();
+            })
+            .catch((err) => {
+                console.error('Error al generar la imagen', err);
+            });
+    };
 
     return (
         <div className="container mx-auto p-6">
@@ -81,19 +106,39 @@ const Index = () => {
                     </div>
                 </div>
 
-                {/* 2. CARNET DIGITAL (SOLO ALUMNOS) */}
+                {/* 2. CARNET DIGITAL CON DESCARGA */}
                 {perfil.tipo === 'alumno' && qrEncriptado && (
-                    <div className="lg:w-1/3 bg-black text-white p-8 rounded-2xl shadow-xl flex flex-col items-center justify-center text-center relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-20">
-                            <QrCodeIcon className="w-32 h-32" />
+                    <div className="lg:w-1/3 flex flex-col gap-4">
+                        {/* Contenedor Ref: Esto es lo que se descargará */}
+                        <div 
+                            ref={carnetRef}
+                            className="bg-black text-white p-8 rounded-2xl shadow-xl flex flex-col items-center justify-center text-center relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 p-4 opacity-20">
+                                <QrCodeIcon className="w-32 h-32" />
+                            </div>
+                            
+                            <h3 className="text-xl font-black uppercase tracking-widest mb-2 relative z-10 font-sans">Carnet Digital</h3>
+                            <p className="text-xs text-slate-400 mb-6 relative z-10 font-bold">I.E. XXXXXX XXXXXX </p>
+                            
+                            <div className="bg-white p-4 rounded-xl shadow-2xl relative z-10">
+                                <QRCode value={qrEncriptado} size={180} />
+                            </div>
+
+                            <div className="mt-6 relative z-10">
+                                <p className="font-bold text-sm uppercase leading-tight">{datos.nombre}</p>
+                                <p className="font-black text-xs text-slate-500 tracking-tighter">COD: {datos.codigo_estudiante}</p>
+                            </div>
                         </div>
-                        
-                        <h3 className="text-xl font-black uppercase tracking-widest mb-2 relative z-10">Carnet Digital</h3>
-                        <p className="text-sm text-slate-400 mb-8 relative z-10">Usa este código para registrar tu ingreso en portería.</p>
-                        
-                        <div className="bg-white p-4 rounded-xl shadow-2xl relative z-10">
-                            <QRCode value={qrEncriptado} size={180} />
-                        </div>
+
+                        {/* Botón de descarga fuera del carnetRef para que no salga en la foto */}
+                        <button
+                            onClick={downloadCarnet}
+                            className="w-full bg-zinc-800 text-white py-3 rounded-xl font-black uppercase text-xs flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg active:scale-95"
+                        >
+                            <ArrowDownTrayIcon className="w-5 h-5 text-green-400" />
+                            Descargar Carnet
+                        </button>
                     </div>
                 )}
             </div>
