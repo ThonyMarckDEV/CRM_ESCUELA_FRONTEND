@@ -9,23 +9,75 @@ export const useStore = () => {
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState(null);
 
-    // Nuevos estados para manejar las matrículas del alumno
-    const [matriculasDisponibles, setMatriculasDisponibles] = useState([]);
-    const [loadingMatriculas, setLoadingMatriculas] = useState(false);
+    // --- ESTADO DE PESTAÑAS ---
+    const [activeTab, setActiveTab] = useState('qr'); 
 
-    // Ampliamos el formData para soportar el componente AlumnoSearchSelect
-    const [formData, setFormData] = useState({
-        alumno_id: '',
-        alumnoNombre: '',
-        alumnoDni: '',
-        matricula_id: '',
-        fecha: new Date().toISOString().split('T')[0], // Hoy por defecto
-        hora_ingreso: '',
-        estado: '1', // Presente
+    // --- ESTADO DE ERRORES DE CÁMARA ---
+    const [cameraError, setCameraError] = useState(null);
+
+    // --- LÓGICA DEL ESCÁNER QR ---
+    const [qrConfig, setQrConfig] = useState({
+        estado: '1', 
         observacion: ''
     });
 
-    // Efecto para cargar la matrícula automáticamente cuando se selecciona un alumno
+    const handleQrConfigChange = (e) => {
+        const { name, value } = e.target;
+        setQrConfig(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Función para manejar errores de la cámara
+    const handleQrError = (error) => {
+        console.error("Error de cámara:", error);
+        if (error?.name === 'NotFoundError' || error?.message?.includes('device not found')) {
+            setCameraError('No se encontró ninguna cámara conectada al dispositivo.');
+        } else if (error?.name === 'NotAllowedError' || error?.message?.includes('Permission denied')) {
+            setCameraError('Permiso denegado. Activa el acceso a la cámara en tu navegador.');
+        } else {
+            setCameraError('Ocurrió un error al intentar iniciar la cámara.');
+        }
+    };
+
+    const handleQrScan = async (detectedText) => {
+        if (!detectedText || loading) return;
+
+        setLoading(true);
+        setAlert(null);
+
+        const now = new Date();
+        const payload = {
+            matricula_id: detectedText.trim(), 
+            fecha: now.toISOString().split('T')[0],
+            hora_ingreso: now.toTimeString().split(' ')[0], 
+            estado: parseInt(qrConfig.estado),
+            observacion: qrConfig.observacion || null
+        };
+
+        try {
+            await store(payload);
+            setAlert({ 
+                type: 'success', 
+                message: `✅ Asistencia registrada (Matrícula #${payload.matricula_id}) a las ${payload.hora_ingreso.substring(0,5)}` 
+            });
+            setQrConfig(prev => ({ ...prev, observacion: '' }));
+        } catch (error) {
+            setAlert(handleApiError(error, 'Error al registrar asistencia por QR.'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    // --- LÓGICA DEL REGISTRO MANUAL ---
+    const [matriculasDisponibles, setMatriculasDisponibles] = useState([]);
+    const [loadingMatriculas, setLoadingMatriculas] = useState(false);
+
+    const [formData, setFormData] = useState({
+        alumno_id: '', alumnoNombre: '', alumnoDni: '', matricula_id: '',
+        fecha: new Date().toISOString().split('T')[0], 
+        hora_ingreso: '', estado: '1', observacion: ''
+    });
+
     useEffect(() => {
         const fetchAlumnoMatriculas = async () => {
             if (!formData.alumno_id) {
@@ -36,13 +88,10 @@ export const useStore = () => {
 
             setLoadingMatriculas(true);
             try {
-                // Buscamos las matrículas activas del alumno usando su DNI en el buscador
                 const response = await getMatriculas(1, { search: formData.alumnoDni, estado: 1 });
                 const foundMatriculas = response.data || [];
-
                 setMatriculasDisponibles(foundMatriculas);
 
-                // Si el alumno tiene solo 1 matrícula activa, la autoseleccionamos para ahorrar tiempo
                 if (foundMatriculas.length === 1) {
                     setFormData(prev => ({ ...prev, matricula_id: foundMatriculas[0].id }));
                 } else {
@@ -55,18 +104,19 @@ export const useStore = () => {
             }
         };
 
-        fetchAlumnoMatriculas();
-    }, [formData.alumno_id, formData.alumnoDni]);
+        if (activeTab === 'manual') {
+            fetchAlumnoMatriculas();
+        }
+    }, [formData.alumno_id, formData.alumnoDni, activeTab]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleManualSubmit = async (e) => {
         e.preventDefault();
 
-        // Validación extra por si acaso
         if (!formData.matricula_id) {
             setAlert({ type: 'error', message: 'Debes seleccionar una matrícula válida para el alumno.' });
             return;
@@ -75,7 +125,6 @@ export const useStore = () => {
         setLoading(true);
         setAlert(null);
 
-        // Formatear la hora si se ingresó
         const payload = {
             matricula_id: formData.matricula_id,
             fecha: formData.fecha,
@@ -87,22 +136,21 @@ export const useStore = () => {
         try {
             await store(payload);
             setAlert({ type: 'success', message: 'Asistencia registrada manualmente con éxito.' });
-            setTimeout(() => navigate('/asistencia/diaria/listar'), 1500);
+            setFormData(prev => ({ 
+                ...prev, alumno_id: '', alumnoNombre: '', alumnoDni: '', matricula_id: '', observacion: '' 
+            }));
+            
         } catch (error) {
-            setAlert(handleApiError(error, 'Error al registrar la asistencia.'));
+            setAlert(handleApiError(error, 'Error al registrar la asistencia manual.'));
+        } finally {
             setLoading(false);
         }
     };
 
     return { 
-        formData, 
-        setFormData, 
-        loading, 
-        loadingMatriculas, 
-        matriculasDisponibles, 
-        alert, 
-        setAlert, 
-        handleChange, 
-        handleSubmit 
+        activeTab, setActiveTab,
+        qrConfig, handleQrConfigChange, handleQrScan, handleQrError, cameraError,
+        formData, setFormData, loading, loadingMatriculas, matriculasDisponibles, 
+        alert, setAlert, handleChange, handleManualSubmit 
     };
 };
