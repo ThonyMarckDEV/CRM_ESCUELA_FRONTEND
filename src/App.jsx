@@ -97,15 +97,15 @@ import { AuthProvider } from 'context/AuthContext';
 function AppContent() {
   return (
     <Routes>
-      {/* 1. LOGIN */}
+      {/* 1. LOGIN: Solo accesible si NO estás logueado */}
       <Route path="/" element={<ProtectedRouteHome element={<Login />} />} />
 
-      {/* 2. LAYOUT GLOBAL */}
+      {/* 2. LAYOUT GLOBAL: Envuelve todas las rutas privadas */}
       <Route
         element={
           <ProtectedRoute 
             element={<SidebarLayout />} 
-            allowedRoles={['superadmin', 'admin', 'alumno' , 'docente' , 'cajero' , 'portero' ]} 
+            allowedRoles={['superadmin', 'admin', 'alumno', 'docente', 'cajero', 'portero']} 
           />
         }
       >
@@ -113,60 +113,53 @@ function AppContent() {
 
         {/* =======================================================
             MÓDULO: ANIO ACADEMICO
-           ======================================================= */}
-        
+        ======================================================= */}
         <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
             <Route path="/anio-academico/agregar" element={<AgregarAnioAcademico />} />
             <Route path="/anio-academico/editar/:id" element={<EditarAnioAcademico />} />
             <Route path="/anio-academico/listar" element={<ListarAniosAcademicos />} />
         </Route>
 
-
         {/* =======================================================
             MÓDULO: PERIODOS
-           ======================================================= */}
-
-        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={[ 'superadmin']} />}>
-            <Route path="/periodo/agregar" element={<AgregarPeriodo />}  />
+        ======================================================= */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
+            <Route path="/periodo/agregar" element={<AgregarPeriodo />} />
             <Route path="/periodo/editar/:id" element={<EditarPeriodo />} />
-            <Route path="/periodo/listar" element={<ListarPeriodos />}  />
+            <Route path="/periodo/listar" element={<ListarPeriodos />} />
         </Route>
 
         {/* =======================================================
             MÓDULO: CURSOS
-           ======================================================= */}
-
+        ======================================================= */}
         <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
             <Route path="/curso/agregar" element={<AgregarCurso />} />
             <Route path="/curso/editar/:id" element={<EditarCurso />} />
-            <Route path="/curso/listar" element={<ListarCursos />}/>
+            <Route path="/curso/listar" element={<ListarCursos />} />
         </Route>
 
         {/* =======================================================
             MÓDULO: NIVELES
-           ======================================================= */}
-
+        ======================================================= */}
         <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
             <Route path="/nivel/agregar" element={<AgregarNivel />} />
             <Route path="/nivel/editar/:id" element={<EditarNivel />} />
-            <Route path="/nivel/listar" element={<ListarNiveles />} allowedRoles={['docente']} />
+            <Route path="/nivel/listar" element={<ListarNiveles />} />
         </Route>
 
         {/* =======================================================
             MÓDULO: GRADOS
-           ======================================================= */}
-
+        ======================================================= */}
         <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
             <Route path="/grado/agregar" element={<AgregarGrado />} />
             <Route path="/grado/editar/:id" element={<EditarGrado />} />
-            <Route path="/grado/listar" element={<ListarGrados />} allowedRoles={['superadmin' , 'docente']}  />
+            <Route path="/grado/listar" element={<ListarGrados />} />
         </Route>
 
         {/* =======================================================
             MÓDULO: ALUMNOS
-           ======================================================= */}
-
-        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['admin']} />}>
+        ======================================================= */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['admin', 'superadmin']} />}>
             <Route path="/alumno/agregar" element={<AgregarAlumno />} />
             <Route path="/alumno/editar/:id" element={<EditarAlumno />} />
             <Route path="/alumno/listar" element={<ListarAlumnos />} />
@@ -174,8 +167,7 @@ function AppContent() {
 
         {/* =======================================================
             MÓDULO: EMPLEADOS
-           ======================================================= */}
-
+        ======================================================= */}
         <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
             <Route path="/empleado/agregar" element={<AgregarEmpleado />} />
             <Route path="/empleado/editar/:id" element={<EditarEmpleado />} />
@@ -184,20 +176,20 @@ function AppContent() {
 
         {/* =======================================================
             MÓDULO: MALLA CURRICULAR
-           ======================================================= */}
-
-        <Route element={<ProtectedRoute element={<Outlet />} />}>
-            <Route path="/malla-curricular/agregar" element={<AgregarMallaCurricular />} allowedRoles={['superadmin' ]}/>
-            <Route path="/malla-curricular/editar/:id" element={<EditarMallaCurricular />} allowedRoles={['superadmin' ]}/>
-            <Route path="/malla-curricular/listar" element={<ListarMallasCurriculares />} allowedRoles={['superadmin' , 'docente' , 'alumno']} />
+        ======================================================= */}
+        {/* Listar: accesible por varios / Agregar-Editar: solo superadmin */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
+            <Route path="/malla-curricular/agregar" element={<AgregarMallaCurricular />} />
+            <Route path="/malla-curricular/editar/:id" element={<EditarMallaCurricular />} />
         </Route>
-
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin', 'docente', 'alumno']} />}>
+            <Route path="/malla-curricular/listar" element={<ListarMallasCurriculares />} />
+        </Route>
 
         {/* =======================================================
             MÓDULO: SECCION
-           ======================================================= */}
-
-        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin' , 'admin']} />}>
+        ======================================================= */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin', 'admin']} />}>
             <Route path="/seccion/agregar" element={<AgregarSeccion />} />
             <Route path="/seccion/editar/:id" element={<EditarSeccion />} />
             <Route path="/seccion/listar" element={<ListarSecciones />} />
@@ -205,19 +197,19 @@ function AppContent() {
 
         {/* =======================================================
             MÓDULO: CONCEPTOS PAGO
-           ======================================================= */}
-
-        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
-            <Route path="/concepto-pago/agregar" element={<AgregarConceptoPago />} />
-            <Route path="/concepto-pago/editar/:id" element={<EditarConceptoPago />} />
-            <Route path="/concepto-pago/listar" element={<ListarConceptosPago />} allowedRoles={['superadmin' , 'cajero']} />
+        ======================================================= */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin', 'cajero']} />}>
+            <Route path="/concepto-pago/listar" element={<ListarConceptosPago />} />
+            <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
+                <Route path="/concepto-pago/agregar" element={<AgregarConceptoPago />} />
+                <Route path="/concepto-pago/editar/:id" element={<EditarConceptoPago />} />
+            </Route>
         </Route>
 
         {/* =======================================================
             MÓDULO: MATRICULA
-           ======================================================= */}
-
-        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['admin']} />}>
+        ======================================================= */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['admin', 'superadmin']} />}>
             <Route path="/matricula/agregar" element={<AgregarMatricula />} />
             <Route path="/matricula/editar/:id" element={<EditarMatricula />} />
             <Route path="/matricula/listar" element={<ListarMatriculas />} />
@@ -225,42 +217,49 @@ function AppContent() {
 
         {/* =======================================================
             MÓDULO: HORARIO
-           ======================================================= */}
-
-        <Route element={<ProtectedRoute element={<Outlet />} />}>
-            <Route path="/horario/agregar" element={<AgregarHorario />} allowedRoles={['superadmin' , 'admin']}/>
-            <Route path="/horario/editar/:id" element={<EditarHorario />} allowedRoles={['superadmin' , 'admin']}/>
-            <Route path="/horario/listar" element={<ListarHorarios />} allowedRoles={['superadmin' , 'admin' , 'docente' , 'alumno']}/>
+        ======================================================= */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin', 'admin']} />}>
+            <Route path="/horario/agregar" element={<AgregarHorario />} />
+            <Route path="/horario/editar/:id" element={<EditarHorario />} />
+        </Route>
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin', 'admin', 'docente', 'alumno']} />}>
+            <Route path="/horario/listar" element={<ListarHorarios />} />
         </Route>
 
         {/* =======================================================
             MÓDULO: PAGO
-           ======================================================= */}
-
-        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin' , 'cajero']} />}>
+        ======================================================= */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin', 'cajero']} />}>
             <Route path="/pago/agregar" element={<AgregarPago />} />
-            <Route path="/pago/listar" element={<ListarPagos />}  />
+            <Route path="/pago/listar" element={<ListarPagos />} />
         </Route>
 
         {/* =======================================================
-            MÓDULO: ASISTENCIA DIARIA
-           ======================================================= */}
+            MÓDULO: ASISTENCIA DIARIA (CORREGIDO)
+        ======================================================= */}
+        {/* Registro: Solo Portero (Escáner/Manual) */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['portero']} />}>
+            <Route path="/asistencia/diaria/agregar" element={<AgregarAsistenciaDiaria />} />
+        </Route>
 
-        <Route element={<ProtectedRoute element={<Outlet />} />}>
-            <Route path="/asistencia/diaria/agregar" element={<AgregarAsistenciaDiaria />}  allowedRoles={['portero']}/>
-            <Route path="/asistencia/diaria/editar/:id" element={<EditarAsistenciaDiaria />} allowedRoles={['superadmin']}/>
-            <Route path="/asistencia/diaria/listar" element={<ListarAsistenciasDiarias />} allowedRoles={['portero','superadmin']}/>
+        {/* Editar: Solo SuperAdmin */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin']} />}>
+            <Route path="/asistencia/diaria/editar/:id" element={<EditarAsistenciaDiaria />} />
+        </Route>
+
+        {/* Listar: Portero y SuperAdmin */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['portero', 'superadmin']} />}>
+            <Route path="/asistencia/diaria/listar" element={<ListarAsistenciasDiarias />} />
         </Route>
 
         {/* =======================================================
             MÓDULO: PERFIL
-           ======================================================= */}
-        
-        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['alumno', 'docente', 'portero']} />}>
+        ======================================================= */}
+        {/* Todos los roles pueden ver y editar su propio perfil */}
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['superadmin', 'admin', 'alumno', 'docente', 'cajero', 'portero']} />}>
             <Route path="/perfil" element={<VerPerfil />} />
             <Route path="/perfil/editar" element={<EditarPerfil />} />
         </Route>
-
 
       </Route>
 

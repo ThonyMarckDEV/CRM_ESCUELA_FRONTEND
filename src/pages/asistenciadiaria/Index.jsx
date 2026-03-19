@@ -7,45 +7,38 @@ import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import AlumnoSearchSelect from 'components/Shared/Comboboxes/AlumnoSearchSelect';
-import { QrCodeIcon, TrashIcon, ClockIcon, AcademicCapIcon, IdentificationIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import { 
+    QrCodeIcon, TrashIcon, ClockIcon, AcademicCapIcon, 
+    IdentificationIcon, PencilSquareIcon, ArrowDownTrayIcon 
+} from '@heroicons/react/24/outline';
 
 const Index = () => {
     const {
         loading, asistencias, paginationInfo, filters, alert, deleteModal,
         setAlert, setDeleteModal, fetchAsistencias, handleFilterChange,
         handleFilterSubmit, handleClearFilters, handleDeleteConfirm,
-        // ✅ Necesitamos setFilters directo para el combobox de alumno
-        setFilters
+        setFilters,
+        exportToExcel // ✅ Obtenido del hook
     } = useIndex();
 
     const { role } = useAuth();
     const isSuperAdmin = role === 'superadmin';
 
     const filterConfig = useMemo(() => [
-        // ✅ Combobox de Alumno en lugar del input de texto
         {
             name: 'alumno_id',
             type: 'custom',
             colSpan: 'col-span-12 md:col-span-5',
             render: () => (
-                <AlumnoSearchSelect
-                    form={filters}
-                    setForm={setFilters}
-                    isFilter={true}
-                />
+                <AlumnoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
             )
         },
         { 
-            name: 'fecha', 
-            type: 'date', 
-            label: 'Fecha', 
-            colSpan: 'col-span-12 md:col-span-3'
+            name: 'fecha', type: 'date', label: 'Fecha', colSpan: 'col-span-12 md:col-span-3'
         },
         { 
             name: 'estado',
-            type: 'select', 
-            label: 'Estado', 
-            colSpan: 'col-span-12 md:col-span-4',
+            type: 'select', label: 'Estado', colSpan: 'col-span-12 md:col-span-4',
             options: [
                 { value: '', label: 'Todos' }, 
                 { value: '1', label: 'Presente' }, 
@@ -53,7 +46,6 @@ const Index = () => {
                 { value: '3', label: 'Justificado' },
             ] 
         }
-    // ✅ filters y setFilters como dependencias para que el combobox vea el estado actualizado
     ], [filters, setFilters]);
 
     const columns = useMemo(() => {
@@ -74,9 +66,7 @@ const Index = () => {
                 header: 'Información del Estudiante',
                 render: (row) => (
                     <div className="flex flex-col">
-                        <span className="font-black text-slate-900 text-sm uppercase mb-1">
-                            {row.alumno_nombre}
-                        </span>
+                        <span className="font-black text-slate-900 text-sm uppercase mb-1">{row.alumno_nombre}</span>
                         <div className="flex flex-wrap items-center gap-2 mt-0.5">
                             <span className="flex items-center gap-1 text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold border border-slate-200">
                                 <IdentificationIcon className="w-3 h-3" /> DNI: {row.alumno_dni}
@@ -87,9 +77,7 @@ const Index = () => {
                             <span className="flex items-center gap-1 text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-bold border border-purple-100">
                                 <AcademicCapIcon className="w-3 h-3" /> {row.grado_seccion}
                             </span>
-                            <span className="text-[10px] text-slate-400" title="ID de Matrícula Interno">
-                                #M{row.matricula_id}
-                            </span>
+                            <span className="text-[10px] text-slate-400" title="ID de Matrícula Interno">#M{row.matricula_id}</span>
                         </div>
                     </div>
                 )
@@ -124,43 +112,41 @@ const Index = () => {
                 header: 'Acciones',
                 render: (row) => (
                     <div className="flex items-center gap-3">
-                        <Link 
-                            to={`/asistencia/diaria/editar/${row.id}`}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                            title="Editar registro"
-                        >
+                        <Link to={`/asistencia/diaria/editar/${row.id}`} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Editar">
                             <PencilSquareIcon className="w-5 h-5" />
                         </Link>
-                        <button 
-                            onClick={() => setDeleteModal({ isOpen: true, id: row.id })} 
-                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                            title="Eliminar registro"
-                        >
+                        <button onClick={() => setDeleteModal({ isOpen: true, id: row.id })} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Eliminar">
                             <TrashIcon className="w-5 h-5" />
                         </button>
                     </div>
                 )
             });
         }
-
         return baseColumns;
     }, [isSuperAdmin, setDeleteModal]);
 
     return (
         <div className="container mx-auto p-6">
-            <PageHeader 
-                title="Reporte de Asistencias" 
-                icon={QrCodeIcon} 
-                buttonText={role === 'portero' ? "+ Escáner de Ingreso" : "+ Registro Manual"} 
-                buttonLink="/asistencia/diaria/agregar"
-            />
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <PageHeader 
+                    title="Reporte de Asistencias" 
+                    icon={QrCodeIcon} 
+                    // Si es portero sale "Registrar +", si es superadmin no sale nada (null)
+                    buttonText={role === 'portero' ? "Registrar +" : null} 
+                    buttonLink={role === 'portero' ? "/asistencia/diaria/agregar" : null}
+                />
+
+                {isSuperAdmin && (
+                    <button
+                        onClick={exportToExcel}
+                        className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-black text-xs uppercase hover:bg-green-700 transition-all shadow-md active:scale-95"
+                    >
+                        <ArrowDownTrayIcon className="w-4 h-4" /> Exportar Excel
+                    </button>
+                )}
+            </div>
             
-            <AlertMessage 
-                type={alert?.type} 
-                message={alert?.message} 
-                details={alert?.details} 
-                onClose={() => setAlert(null)} 
-            />
+            <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
             
             <Table 
                 columns={columns} 

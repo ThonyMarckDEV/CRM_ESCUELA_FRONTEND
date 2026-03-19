@@ -34,7 +34,8 @@
     "sockjs-client": "^1.6.1",
     "sweetalert2": "^11.21.0",
     "talkyfrontend": "file:",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "react-scripts start",
