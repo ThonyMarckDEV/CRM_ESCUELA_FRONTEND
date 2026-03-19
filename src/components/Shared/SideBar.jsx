@@ -88,6 +88,12 @@ const MASTER_MENU = [
             },
         ],
     },
+    {
+        section: 'Mi Perfil',
+        link: '/perfil',
+        icon: UserIcon,
+        allowedRoles: ['alumno', 'docente', 'portero']
+    },
     { 
         section: 'Malla Curricular', 
         icon: ListBulletIcon,
@@ -253,12 +259,6 @@ const MASTER_MENU = [
                 allowedRoles: ['portero'] 
             }
         ],
-    },
-    {
-        section: 'Mi Perfil',
-        link: '/perfil',
-        icon: UserIcon,
-        allowedRoles: ['alumno', 'docente', 'portero']
     },
 ];
 
