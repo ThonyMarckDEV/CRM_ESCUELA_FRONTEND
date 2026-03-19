@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { store } from 'services/asistenciaDiariaService';
 import { index as getMatriculas } from 'services/matriculaService';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+import CryptoJS from 'crypto-js';
 
 export const useStore = () => {
-    const navigate = useNavigate();
+    useNavigate();
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState(null);
 
@@ -39,29 +40,63 @@ export const useStore = () => {
     };
 
     const handleQrScan = async (detectedText) => {
-        if (!detectedText || loading) return;
+       if (!detectedText || loading) return;
 
         setLoading(true);
         setAlert(null);
 
-        const now = new Date();
-        const payload = {
-            matricula_id: detectedText.trim(), 
-            fecha: now.toISOString().split('T')[0],
-            hora_ingreso: now.toTimeString().split(' ')[0], 
-            estado: parseInt(qrConfig.estado),
-            observacion: qrConfig.observacion || null
-        };
-
         try {
+            // 1. Desencriptar el QR
+            // Usamos la variable de entorno, o un fallback por si falla la carga del .env
+            const secretKey = process.env.REACT_APP_QR_SECRET_KEY;
+            const bytes = CryptoJS.AES.decrypt(detectedText.trim(), secretKey);
+            const decryptedDNI = bytes.toString(CryptoJS.enc.Utf8);
+
+            // Validamos que se haya podido desencriptar correctamente
+            if (!decryptedDNI || decryptedDNI.length < 8) {
+                setAlert({ type: 'error', message: 'QR Inválido o alterado. Acceso denegado.' });
+                setLoading(false);
+                return;
+            }
+
+            // 2. Buscar la matrícula activa de este DNI (reutilizamos getMatriculas)
+            const responseMatricula = await getMatriculas(1, { search: decryptedDNI, estado: 1 });
+            const matriculas = responseMatricula.data || [];
+
+            if (matriculas.length === 0) {
+                setAlert({ type: 'error', message: `No hay matrícula activa para el DNI: ${decryptedDNI}` });
+                setLoading(false);
+                return;
+            }
+
+            const matriculaValida = matriculas[0];
+
+            // 3. Registrar la Asistencia
+            const now = new Date();
+            const payload = {
+                matricula_id: matriculaValida.id, 
+                fecha: now.toISOString().split('T')[0],
+                hora_ingreso: now.toTimeString().split(' ')[0], 
+                estado: parseInt(qrConfig.estado),
+                observacion: qrConfig.observacion || null
+            };
+
             await store(payload);
             setAlert({ 
                 type: 'success', 
-                message: `✅ Asistencia registrada (Matrícula #${payload.matricula_id}) a las ${payload.hora_ingreso.substring(0,5)}` 
+                message: `✅ Asistencia de ${matriculaValida.alumno_nombre || 'Alumno'} registrada a las ${payload.hora_ingreso.substring(0,5)}` 
             });
+            
+            // Limpiamos observación para el siguiente
             setQrConfig(prev => ({ ...prev, observacion: '' }));
+
         } catch (error) {
-            setAlert(handleApiError(error, 'Error al registrar asistencia por QR.'));
+            // Si AES.decrypt falla catastróficamente por un formato erróneo
+            if (error.message && error.message.includes('Malformed UTF-8 data')) {
+                setAlert({ type: 'error', message: 'El código QR no pertenece a esta institución.' });
+            } else {
+                setAlert(handleApiError(error, 'Error al procesar la asistencia.'));
+            }
         } finally {
             setLoading(false);
         }

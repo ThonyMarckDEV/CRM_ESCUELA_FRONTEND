@@ -19,7 +19,7 @@ const Store = () => {
         alert, setAlert, handleChange, handleManualSubmit 
     } = useStore();
     
-    const navigate = useNavigate();
+    useNavigate();
 
     return (
         <div className="container mx-auto p-6">

@@ -83,6 +83,10 @@ import ListarAsistenciasDiarias from 'pages/asistenciadiaria/Index';
 import AgregarAsistenciaDiaria from 'pages/asistenciadiaria/Store';
 import EditarAsistenciaDiaria from 'pages/asistenciadiaria/Update';
 
+// UI PERFIL
+import VerPerfil from 'pages/perfil/Index';
+import EditarPerfil from 'pages/perfil/Update';
+
 
 
 // Utilities
@@ -246,6 +250,15 @@ function AppContent() {
             <Route path="/asistencia/diaria/agregar" element={<AgregarAsistenciaDiaria />}  allowedRoles={['portero']}/>
             <Route path="/asistencia/diaria/editar/:id" element={<EditarAsistenciaDiaria />} allowedRoles={['portero']}/>
             <Route path="/asistencia/diaria/listar" element={<ListarAsistenciasDiarias />} allowedRoles={['portero']}/>
+        </Route>
+
+        {/* =======================================================
+            MÓDULO: PERFIL
+           ======================================================= */}
+        
+        <Route element={<ProtectedRoute element={<Outlet />} allowedRoles={['alumno', 'docente', 'portero']} />}>
+            <Route path="/perfil" element={<VerPerfil />} />
+            <Route path="/perfil/editar" element={<EditarPerfil />} />
         </Route>
 
 

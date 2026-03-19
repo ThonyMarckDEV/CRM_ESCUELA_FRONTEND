@@ -13,7 +13,7 @@ import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { BookIcon, CalendarArrowDown, GraduationCapIcon, Section, UserSquare2Icon } from 'lucide-react';
 import { useAuth } from 'context/AuthContext';
 import { FaCertificate, FaLevelUpAlt, FaMoneyBillWaveAlt, FaMoneyCheck, FaUserGraduate } from 'react-icons/fa';
-import { QrCodeIcon } from '@heroicons/react/24/outline';
+import { QrCodeIcon,UserIcon } from '@heroicons/react/24/outline';
 
 // =======================================================================
 // CONFIGURACIÓN MAESTRA DEL MENÚ
@@ -253,6 +253,12 @@ const MASTER_MENU = [
                 allowedRoles: ['portero'] 
             }
         ],
+    },
+    {
+        section: 'Mi Perfil',
+        link: '/perfil',
+        icon: UserIcon,
+        allowedRoles: ['alumno', 'docente', 'portero']
     },
 ];
 
