@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { index } from 'services/gradoService';
+import { indexcombobox } from 'services/gradoService';
 import { 
     MagnifyingGlassIcon, AcademicCapIcon, XMarkIcon, LockClosedIcon 
 } from '@heroicons/react/24/outline';
@@ -14,7 +14,6 @@ const GradoSearchSelect = ({ form, setForm, disabled, isFilter = false }) => {
 
     useEffect(() => {
         if (form?.grado_id) {
-            // Se asume que form.gradoNombre viene concatenado o que form maneja un campo extra para mostrar el valor en el input
             if (inputValue !== form.gradoNombre) {
                 setInputValue(form.gradoNombre || '');
             }
@@ -37,8 +36,7 @@ const GradoSearchSelect = ({ form, setForm, disabled, isFilter = false }) => {
     const fetchGrados = async (searchTerm = '') => {
         setLoading(true);
         try {
-            const response = await index(1, { search: searchTerm });
-            // Tu API retorna 'data' por el paginate()
+            const response = await indexcombobox(1, { search: searchTerm });
             setSuggestions(response.data || []);
             setShowSuggestions(true);
         } catch (error) {
@@ -52,7 +50,6 @@ const GradoSearchSelect = ({ form, setForm, disabled, isFilter = false }) => {
         const texto = e.target.value;
         setInputValue(texto);
 
-        // Si cambia el texto, limpiamos la selección previa
         if (form.grado_id || form.seccion_id) {
             setForm(prev => ({ 
                 ...prev, 
@@ -60,7 +57,7 @@ const GradoSearchSelect = ({ form, setForm, disabled, isFilter = false }) => {
                 gradoNombre: '',
                 seccion_id: '',
                 seccionNombre: '',
-                nivelNombre: '' // Agregamos nivelNombre al limpiar
+                nivelNombre: ''
             }));
         }
 
@@ -69,16 +66,14 @@ const GradoSearchSelect = ({ form, setForm, disabled, isFilter = false }) => {
     };
 
     const handleSelect = (grado) => {
-        // Mostramos el nombre del grado en el input
         setInputValue(grado.nombre);
         setShowSuggestions(false);
 
-        // Actualizamos el formulario con los datos completos
         setForm(prev => ({ 
             ...prev, 
             grado_id: grado.id, 
             gradoNombre: grado.nombre,
-            nivelNombre: grado.nivel_nombre, // Guardamos el nivel seleccionado
+            nivelNombre: grado.nivel_nombre,
             seccion_id: '', 
             seccionNombre: ''
         }));
@@ -92,7 +87,7 @@ const GradoSearchSelect = ({ form, setForm, disabled, isFilter = false }) => {
             ...prev, 
             grado_id: '', 
             gradoNombre: '', 
-            nivelNombre: '', // Limpiamos el nivel
+            nivelNombre: '',
             seccion_id: '', 
             seccionNombre: '' 
         }));
