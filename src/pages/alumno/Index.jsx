@@ -1,82 +1,36 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { index, show, toggleStatus } from 'services/alumnoService';
+import { useIndex } from './hooks/useIndex';
 import Table from 'components/Shared/Tables/Table';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import ViewModal from 'components/Shared/Modals/ViewModal';
-import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import { UserGroupIcon, PencilSquareIcon, UserIcon, IdentificationIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 const Index = () => {
-  const [loading, setLoading] = useState(true);
-  const [alumnos, setAlumnos] = useState([]);
-  const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1 });
-  
-  const [filters, setFilters] = useState({ search: '', sexo: '' , estado: ''});
-  const filtersRef = useRef(filters);
-  const [alert, setAlert] = useState(null);
-
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [idToToggle, setIdToToggle] = useState(null);
-
-  const [isViewOpen, setIsViewOpen] = useState(false);
-  const [viewData, setViewData] = useState(null);
-  const [viewLoading, setViewLoading] = useState(false);
-
-  const fetchAlumnos = useCallback(async (page = 1) => {
-    setLoading(true);
-    try {
-      const response = await index(page, filtersRef.current);
-      setAlumnos(response.data || []);
-      setPaginationInfo({
-        currentPage: response.current_page,
-        totalPages: response.last_page,
-      });
-    } catch (err) {
-      setAlert(handleApiError(err, 'Error al cargar el listado de alumnos'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchAlumnos(1); }, [fetchAlumnos]);
-
-  const handleAskToggle = (id) => {
-    setIdToToggle(id);
-    setShowConfirm(true);
-  };
-
-  const handleConfirmToggle = async () => {
-    setShowConfirm(false);
-    setLoading(true);
-    try {
-      await toggleStatus(idToToggle);
-      setAlert({ type: 'success', message: 'Estado del alumno actualizado correctamente.' });
-      await fetchAlumnos(paginationInfo.currentPage);
-    } catch (err) {
-      setAlert(handleApiError(err, 'Error al cambiar el estado'));
-    } finally {
-      setLoading(false);
-      setIdToToggle(null);
-    }
-  };
-
-  const handleView = async (id) => {
-    setIsViewOpen(true);
-    setViewLoading(true);
-    setViewData(null);
-    try {
-      const response = await show(id);
-      setViewData(response.data || response);
-    } catch (error) {
-      setAlert(handleApiError(error, 'Error al cargar detalles del alumno'));
-      setIsViewOpen(false);
-    } finally {
-      setViewLoading(false);
-    }
-  };
+  // Ahora llamamos a useIndex
+  const {
+    loading,
+    alumnos,
+    paginationInfo,
+    filters,
+    alert,
+    showConfirm,
+    isViewOpen,
+    viewData,
+    viewLoading,
+    setAlert,
+    fetchAlumnos,
+    handleFilterChange,
+    handleFilterSubmit,
+    handleClearFilters,
+    handleAskToggle,
+    handleConfirmToggle,
+    handleCancelToggle,
+    handleView,
+    handleCloseView
+  } = useIndex();
 
   const filterConfig = useMemo(() => [
     { 
@@ -160,7 +114,6 @@ const Index = () => {
       header: 'Acciones',
       render: (row) => (
         <div className="flex items-center gap-2">
-          {/* Botón Ver Detalle */}
           <button 
             onClick={() => handleView(row.id)}
             className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all"
@@ -168,22 +121,13 @@ const Index = () => {
           >
             <EyeIcon className="w-5 h-5" />
           </button>
-
-          {/* Botón Editar */}
           <Link to={`/alumno/editar/${row.id}`} className="text-black hover:scale-110 transition-transform" title="Editar">
             <PencilSquareIcon className="w-5 h-5" />
           </Link>
         </div>
       )
     }
-  ], []);
-
-  const handleClearFilters = () => { 
-      const c = { search:'', sexo: '', estado: '' };
-      setFilters(c); 
-      filtersRef.current = c; 
-      fetchAlumnos(1); 
-  };
+  ], [handleAskToggle, handleView]);
 
   return (
     <div className="container mx-auto p-6">
@@ -194,7 +138,12 @@ const Index = () => {
         buttonLink="/alumno/agregar" 
       />
 
-      <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
+      <AlertMessage 
+        type={alert?.type} 
+        message={alert?.message} 
+        details={alert?.details} 
+        onClose={() => setAlert(null)} 
+      />
 
       <Table
         columns={columns}
@@ -202,8 +151,8 @@ const Index = () => {
         loading={loading}
         filterConfig={filterConfig} 
         filters={filters}
-        onFilterChange={(name, val) => setFilters(prev => ({...prev, [name]: val}))}
-        onFilterSubmit={() => { filtersRef.current = filters; fetchAlumnos(1); }}
+        onFilterChange={handleFilterChange}
+        onFilterSubmit={handleFilterSubmit}
         onFilterClear={handleClearFilters}
         pagination={{
           currentPage: paginationInfo.currentPage,
@@ -212,28 +161,25 @@ const Index = () => {
         }}
       />
 
-      {/* Modal de Confirmación */}
       {showConfirm && (
         <ConfirmModal 
             message="¿Estás seguro de cambiar el estado de acceso de este alumno?"
             confirmText="Sí, cambiar"
             cancelText="Cancelar"
             onConfirm={handleConfirmToggle}
-            onCancel={() => { setShowConfirm(false); setIdToToggle(null); }}
+            onCancel={handleCancelToggle}
         />
       )}
 
-      {/* Modal de Visualización */}
       <ViewModal 
         isOpen={isViewOpen} 
-        onClose={() => setIsViewOpen(false)} 
+        onClose={handleCloseView} 
         title="Detalles del Alumno"
         isLoading={viewLoading}
       >
         {viewData && (
             <div className="space-y-6">
                 
-                {/* Sección 1: Datos Personales */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <h4 className="text-xs font-bold text-gray-400 uppercase mb-1">Nombre Completo</h4>
@@ -268,7 +214,6 @@ const Index = () => {
                     </div>
                 </div>
 
-                {/* Sección 2: Apoderado y Contacto */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                     <h4 className="text-sm font-black text-gray-700 uppercase mb-3 flex items-center gap-2">
                         <UserIcon className="w-4 h-4"/> Apoderado & Contacto
@@ -297,7 +242,6 @@ const Index = () => {
                     </div>
                 </div>
 
-                {/* Sección 3: Usuario */}
                 {viewData.usuario && (
                     <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
                         <div className="flex items-center gap-3">
