@@ -57,38 +57,48 @@ const Store = () => {
                     {activeTab === 'qr' && (
                         <div className="space-y-8">
                             
-                            <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-4">
+                           <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-4 text-center">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase mb-3">
                                         Estado a registrar al escanear:
                                     </label>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        <label className={`cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${qrConfig.estado === '1' ? 'border-green-500 bg-green-50 text-green-700' : 'border-slate-200 hover:bg-slate-100 text-slate-500'}`}>
+                                    
+                                    {/* Agregamos justify-center para centrar las columnas del grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-center">
+    
+                                        {/* Opción: Presente (EL POR DEFECTO) */}
+                                        <label className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center gap-2 transition-all ${qrConfig.estado === '1' ? 'border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200' : 'border-slate-200 hover:bg-slate-100 text-slate-500'}`}>
                                             <input type="radio" name="estado" value="1" checked={qrConfig.estado === '1'} onChange={handleQrConfigChange} className="hidden" />
-                                            <CheckCircleIcon className="w-6 h-6" /> <span className="font-bold text-xs">Presente</span>
+                                            <CheckCircleIcon className="w-8 h-8" /> 
+                                            <span className="font-black text-xs uppercase">Presente</span>
                                         </label>
-                                        <label className={`cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${qrConfig.estado === '3' ? 'border-yellow-500 bg-yellow-50 text-yellow-700' : 'border-slate-200 hover:bg-slate-100 text-slate-500'}`}>
+
+                                        {/* Opción: Tardanza */}
+                                        <label className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center gap-2 transition-all ${qrConfig.estado === '3' ? 'border-yellow-500 bg-yellow-50 text-yellow-700 ring-2 ring-yellow-200' : 'border-slate-200 hover:bg-slate-100 text-slate-500'}`}>
                                             <input type="radio" name="estado" value="3" checked={qrConfig.estado === '3'} onChange={handleQrConfigChange} className="hidden" />
-                                            <ClockIcon className="w-6 h-6" /> <span className="font-bold text-xs">Tardanza</span>
+                                            <ClockIcon className="w-8 h-8" /> 
+                                            <span className="font-black text-xs uppercase">Tardanza</span>
                                         </label>
-                                        <label className={`cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${qrConfig.estado === '4' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:bg-slate-100 text-slate-500'}`}>
+
+                                        {/* Opción: Justificado */}
+                                        <label className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center gap-2 transition-all ${qrConfig.estado === '4' ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200' : 'border-slate-200 hover:bg-slate-100 text-slate-500'}`}>
                                             <input type="radio" name="estado" value="4" checked={qrConfig.estado === '4'} onChange={handleQrConfigChange} className="hidden" />
-                                            <DocumentTextIcon className="w-6 h-6" /> <span className="font-bold text-xs">Justificado</span>
+                                            <DocumentTextIcon className="w-8 h-8" /> 
+                                            <span className="font-black text-xs uppercase">Justificado</span>
                                         </label>
-                                        <label className={`cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${qrConfig.estado === '2' ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 hover:bg-slate-100 text-slate-500'}`}>
-                                            <input type="radio" name="estado" value="2" checked={qrConfig.estado === '2'} onChange={handleQrConfigChange} className="hidden" />
-                                            <XCircleIcon className="w-6 h-6" /> <span className="font-bold text-xs">Falta</span>
-                                        </label>
+
                                     </div>
+
                                 </div>
-                                <div>
+
+                                <div className="max-w-md mx-auto">
                                     <input
                                         type="text"
                                         name="observacion"
                                         value={qrConfig.observacion}
                                         onChange={handleQrConfigChange}
                                         placeholder="Observación opcional para el siguiente escaneo..."
-                                        className="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-black outline-none"
+                                        className="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-black outline-none text-center"
                                         autoComplete="off"
                                     />
                                 </div>
@@ -120,10 +130,15 @@ const Store = () => {
                                             </div>
                                         )}
                                         
-                                        <Scanner 
-                                            onResult={(text) => handleQrScan(text)} 
+                                       <Scanner 
+                                            onScan={(detectedCodes) => {
+                                                // La versión 2.x devuelve un array de objetos, sacamos el texto del primer resultado
+                                                if (detectedCodes && detectedCodes.length > 0) {
+                                                    handleQrScan(detectedCodes[0].rawValue);
+                                                }
+                                            }} 
                                             onError={handleQrError} 
-                                            options={{ delayBetweenScanSuccess: 2000 }} 
+                                            // Si quieres formatos específicos puedes poner: formats={['qr_code']}
                                         />
                                     </>
                                 )}
@@ -195,9 +210,8 @@ const Store = () => {
                                     <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Estado *</label>
                                     <select name="estado" value={formData.estado} onChange={handleChange} required className="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-black outline-none">
                                         <option value="1">Presente</option>
-                                        <option value="3">Tardanza</option>
-                                        <option value="4">Justificado</option>
-                                        <option value="2">Falta</option>
+                                        <option value="2">Tardanza</option>
+                                        <option value="3">Justificado</option>
                                     </select>
                                 </div>
 
