@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { index, destroy } from 'services/matriculaService';
+import { useIndex } from './hooks/useIndex';
+
 import Table from 'components/Shared/Tables/Table';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
-import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import AnioAcademicoSearchSelect from 'components/Shared/Comboboxes/AnioAcademicoSearchSelect';
+
 import { 
     IdentificationIcon, 
     AcademicCapIcon, 
@@ -17,54 +18,22 @@ import {
 import { LockClosedIcon } from '@heroicons/react/24/solid';
 
 const Index = () => {
-    const [loading, setLoading] = useState(true);
-    const [matriculas, setMatriculas] = useState([]);
-    const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1 });
-    
-    const [filters, setFilters] = useState({ search: '', anio_academico_id: '', estado: '' });
-    const filtersRef = useRef(filters);
-    const [alert, setAlert] = useState(null);
-    
-    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, nombre: '' });
-
-    const fetchMatriculas = useCallback(async (page = 1) => {
-        setLoading(true);
-        try {
-            const response = await index(page, filtersRef.current);
-            setMatriculas(response.data || []);
-            setPaginationInfo({
-                currentPage: response.current_page,
-                last_page: response.last_page,
-                totalPages: response.last_page,
-            });
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al cargar matrículas'));
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { fetchMatriculas(1); }, [fetchMatriculas]);
-
-    // Recargar si cambia el año (filtro común)
-    useEffect(() => {
-        if (filters.anio_academico_id !== filtersRef.current.anio_academico_id) {
-            filtersRef.current = { ...filtersRef.current, anio_academico_id: filters.anio_academico_id };
-            fetchMatriculas(1); 
-        }
-    }, [filters.anio_academico_id, fetchMatriculas]);
-
-    const handleConfirmDelete = async () => {
-        try {
-            await destroy(deleteModal.id);
-            setAlert({ type: 'success', message: 'Matrícula eliminada.' });
-            fetchMatriculas(paginationInfo.currentPage);
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al eliminar'));
-        } finally {
-            setDeleteModal({ isOpen: false, id: null, nombre: '' });
-        }
-    };
+    const {
+        loading,
+        matriculas,
+        paginationInfo,
+        filters,
+        setFilters,
+        alert,
+        setAlert,
+        deleteModal,
+        setDeleteModal,
+        fetchMatriculas,
+        handleConfirmDelete,
+        handleFilterChange,
+        handleFilterSubmit,
+        handleFilterClear
+    } = useIndex();
 
     const columns = useMemo(() => [
         {
@@ -121,7 +90,6 @@ const Index = () => {
             header: 'Acciones',
             render: (row) => (
                 <div className="flex gap-2">
-                    {/* Botón Editar (Siempre visible, pero el form interno manejará sus bloqueos) */}
                     <Link 
                         to={`/matricula/editar/${row.id}`} 
                         className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
@@ -130,7 +98,6 @@ const Index = () => {
                         <PencilSquareIcon className="w-5 h-5" />
                     </Link>
 
-                    {/* Botón Eliminar (Condicional) */}
                     {row.bloqueado_delete ? (
                         <div 
                             className="p-1.5 text-gray-300 cursor-not-allowed" 
@@ -150,7 +117,7 @@ const Index = () => {
                 </div>
             )
         }
-    ], []);
+    ], [setDeleteModal]);
 
     const filterConfig = useMemo(() => [
         { name: 'search', type: 'text', label: 'Buscar Alumno', placeholder: 'Nombre, DNI...', colSpan: 'col-span-12 md:col-span-6' },
@@ -160,8 +127,7 @@ const Index = () => {
             colSpan: 'col-span-12 md:col-span-3',
             render: () => <AnioAcademicoSearchSelect form={filters} setForm={setFilters} isFilter={true} />
         },
-        // Puedes agregar más filtros como estado aquí si quieres
-    ], [filters]);
+    ], [filters, setFilters]);
 
     return (
         <div className="container mx-auto p-6">
@@ -174,17 +140,11 @@ const Index = () => {
                 loading={loading} 
                 filterConfig={filterConfig}
                 filters={filters}
-                onFilterChange={(n, v) => setFilters(p => ({...p, [n]: v}))}
-                onFilterSubmit={() => { filtersRef.current = filters; fetchMatriculas(1); }}
-                onFilterClear={() => { 
-                    const c = {search:'', anio_academico_id: '', estado: ''}; 
-                    setFilters(c); 
-                    filtersRef.current = c; 
-                    fetchMatriculas(1); 
-                }}
+                onFilterChange={handleFilterChange}
+                onFilterSubmit={handleFilterSubmit}
+                onFilterClear={handleFilterClear}
                 pagination={{
-                    currentPage: paginationInfo.currentPage,
-                    totalPages: paginationInfo.totalPages,
+                    ...paginationInfo,
                     onPageChange: fetchMatriculas
                 }}
             />

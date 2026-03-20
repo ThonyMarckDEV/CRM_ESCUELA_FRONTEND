@@ -1,47 +1,28 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { index, destroy, toggleStatus } from 'services/anioAcademicoService';
+import { useIndex } from './hooks/useIndex';
 import Table from 'components/Shared/Tables/Table';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { CalendarIcon, PencilSquareIcon, TrashIcon, LockClosedIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
-import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 const Index = () => {
-    const [loading, setLoading] = useState(true);
-    const [anios, setAnios] = useState([]);
-    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1 });
-    const [filters] = useState({ search: '' });
-    const [alert, setAlert] = useState(null);
-    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, nombre: '' });
-    const [statusModal, setStatusModal] = useState({ isOpen: false, id: null, estadoActual: null });
-
-    const fetchAnios = useCallback(async (page = 1) => {
-        setLoading(true);
-        try {
-            const response = await index(page, filters);
-            setAnios(response.data || []);
-            setPagination({ currentPage: response.current_page, totalPages: response.last_page });
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al cargar los años'));
-        } finally {
-            setLoading(false);
-        }
-    }, [filters]);
-
-    useEffect(() => { fetchAnios(1); }, [fetchAnios]);
-
-    const handleStatusChange = async () => {
-        try {
-            await toggleStatus(statusModal.id);
-            setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
-            fetchAnios(pagination.currentPage);
-        } catch (err) {
-            setAlert(handleApiError(err,'Error al cambiar el estado.'));
-        }
-        setStatusModal({ isOpen: false });
-    };
+    // Extraemos todo lo necesario de nuestro custom hook
+    const {
+        loading,
+        anios,
+        pagination,
+        alert,
+        setAlert,
+        deleteModal,
+        setDeleteModal,
+        statusModal,
+        setStatusModal,
+        fetchAnios,
+        handleStatusChange,
+        handleDelete
+    } = useIndex();
 
     const columns = useMemo(() => [
         {
@@ -95,7 +76,7 @@ const Index = () => {
                 </div>
             )
         }
-    ], []);
+    ], [setStatusModal, setDeleteModal]); // Agregamos las funciones como dependencias del useMemo
 
     return (
         <div className="container mx-auto p-6">
@@ -109,14 +90,7 @@ const Index = () => {
                 <ConfirmModal 
                     title="¿Eliminar Año?" 
                     message={`¿Seguro que quieres borrar el año ${deleteModal.nombre}? Esta acción no se puede deshacer.`} 
-                    onConfirm={async () => {
-                        try {
-                            await destroy(deleteModal.id);
-                            setAlert({ type: 'success', message: 'Año eliminado.' });
-                            fetchAnios();
-                        } catch(e) { setAlert({ type: 'error', message: 'No se pudo eliminar.' }); }
-                        setDeleteModal({ isOpen: false });
-                    }}
+                    onConfirm={handleDelete} // Usamos la función extraída del hook
                     onCancel={() => setDeleteModal({ isOpen: false })}
                 />
             )}

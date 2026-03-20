@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-
-// Servicios
-import { index, destroy } from 'services/conceptoPagoService';
+import { useIndex } from './hooks/useIndex'; // Ajusta la ruta si es necesario
 
 // Componentes UI
 import Table from 'components/Shared/Tables/Table';
@@ -22,68 +20,24 @@ import {
     AcademicCapIcon
 } from '@heroicons/react/24/outline';
 
-import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-
 const Index = () => {
-    const [loading, setLoading] = useState(true);
-    const [conceptos, setConceptos] = useState([]);
-    const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1 });
-    
-    const [filters, setFilters] = useState({ search: '', periodo_id: '', anio_academico_id: '' });
-    const filtersRef = useRef(filters);
-    const [alert, setAlert] = useState(null);
-
-    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, nombre: '' });
-
-    const fetchConceptos = useCallback(async (page = 1) => {
-        setLoading(true);
-        try {
-            const response = await index(page, filtersRef.current);
-            setConceptos(response.data || []);
-            setPaginationInfo({
-                currentPage: response.current_page,
-                last_page: response.last_page,
-                totalPages: response.last_page,
-            });
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al cargar los conceptos'));
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { fetchConceptos(1); }, [fetchConceptos]);
-
-    useEffect(() => {
-        if (
-            filters.periodo_id !== filtersRef.current.periodo_id || 
-            filters.anio_academico_id !== filtersRef.current.anio_academico_id
-        ) {
-            filtersRef.current = { 
-                ...filtersRef.current, 
-                periodo_id: filters.periodo_id,
-                anio_academico_id: filters.anio_academico_id
-            };
-            fetchConceptos(1); 
-        }
-    }, [filters.periodo_id, filters.anio_academico_id, fetchConceptos]);
-
-    const handleDeleteClick = (row) => {
-        if (!row.contexto_abierto) return;
-        setDeleteModal({ isOpen: true, id: row.id, nombre: row.nombre });
-    };
-
-    const confirmDelete = async () => {
-        try {
-            await destroy(deleteModal.id);
-            setAlert({ type: 'success', message: 'Concepto eliminado correctamente.' });
-            fetchConceptos(paginationInfo.currentPage);
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al eliminar el concepto'));
-        } finally {
-            setDeleteModal({ isOpen: false, id: null, nombre: '' });
-        }
-    };
+    const {
+        loading,
+        conceptos,
+        paginationInfo,
+        filters,
+        setFilters,
+        alert,
+        setAlert,
+        deleteModal,
+        setDeleteModal,
+        fetchConceptos,
+        handleDeleteClick,
+        confirmDelete,
+        handleFilterChange,
+        handleFilterSubmit,
+        handleFilterClear
+    } = useIndex();
 
     const columns = useMemo(() => [
         {
@@ -186,9 +140,9 @@ const Index = () => {
                 );
             }
         }
-    ], []);
+    ], [handleDeleteClick]); // Agregamos handleDeleteClick como dependencia
 
-    // --- CONFIGURACIÓN DE FILTROS ACTUALIZADA ---
+    // --- CONFIGURACIÓN DE FILTROS ---
     const filterConfig = useMemo(() => [
         { 
             name: 'search', 
@@ -197,7 +151,6 @@ const Index = () => {
             placeholder: 'Nombre del concepto...', 
             colSpan: 'col-span-12 md:col-span-6' 
         },
-        // FILTRO DE AÑO 
         {
             name: 'anio_academico_id',
             type: 'custom',
@@ -211,7 +164,6 @@ const Index = () => {
                 />
             )
         },
-        // FILTRO DE PERIODO
         {
             name: 'periodo_id',
             type: 'custom',
@@ -225,7 +177,7 @@ const Index = () => {
                 />
             )
         }
-    ], [filters]);
+    ], [filters, setFilters]); // Agregamos filters y setFilters como dependencias
 
     return (
         <div className="container mx-auto p-6">
@@ -244,18 +196,11 @@ const Index = () => {
                 loading={loading}
                 filterConfig={filterConfig} 
                 filters={filters}
-                onFilterChange={(name, val) => setFilters(prev => ({...prev, [name]: val}))}
-                onFilterSubmit={() => { filtersRef.current = filters; fetchConceptos(1); }}
-                onFilterClear={() => { 
-                    // Limpiamos los 3 filtros
-                    const c = {search:'', periodo_id: '', anio_academico_id: ''}; 
-                    setFilters(c); 
-                    filtersRef.current = c; 
-                    fetchConceptos(1); 
-                }}
+                onFilterChange={handleFilterChange}
+                onFilterSubmit={handleFilterSubmit}
+                onFilterClear={handleFilterClear}
                 pagination={{
-                    currentPage: paginationInfo.currentPage,
-                    totalPages: paginationInfo.totalPages,
+                    ...paginationInfo,
                     onPageChange: fetchConceptos
                 }}
             />

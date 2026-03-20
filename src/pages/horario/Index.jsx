@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from 'context/AuthContext';
-import { index, destroy } from 'services/horarioService';
+import { useIndex } from './hooks/useIndex';
+
 import Table from 'components/Shared/Tables/Table';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
-import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-
 import AnioAcademicoSearchSelect from 'components/Shared/Comboboxes/AnioAcademicoSearchSelect';
 import DocenteSearchSelect from 'components/Shared/Comboboxes/DocenteSearchSelect';
 import GradoSearchSelect from 'components/Shared/Comboboxes/GradoSearchSelect';
@@ -19,82 +17,29 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Index = () => {
-    const { user, role, loading: authLoading } = useAuth();
+    const {
+        user,
+        role,
+        loading,
+        horarios,
+        paginationInfo,
+        filters,
+        setFilters,
+        showHorarioModal,
+        setShowHorarioModal,
+        alert,
+        setAlert,
+        deleteModal,
+        setDeleteModal,
+        fetchHorarios,
+        handleConfirmDelete,
+        showViewScheduleButton,
+        getModalSeccionId,
+        handleFilterChange,
+        handleFilterSubmit,
+        handleFilterClear
+    } = useIndex();
 
-    const [loading, setLoading] = useState(true);
-    const [horarios, setHorarios] = useState([]);
-    const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1 });
-
-    const [filters, setFilters] = useState({ 
-        anio_academico_id: '', docente_id: '', grado_id: '', seccion_id: '', seccionNombre: '' , search: ''
-    });
-    
-    const filtersRef = useRef(filters);
-    const [showHorarioModal, setShowHorarioModal] = useState(false);
-    const [alert, setAlert] = useState(null);
-    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, descripcion: '' });
-
-    // --- CARGA DE DATOS ---
-    const fetchHorarios = useCallback(async (page = 1) => {
-        if (authLoading) return;
-        setLoading(true);
-        try {
-            const response = await index(page, filtersRef.current);
-            setHorarios(response.data || []);
-            setPaginationInfo({
-                currentPage: response.current_page,
-                totalPages: response.last_page,
-            });
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al cargar horarios'));
-        } finally {
-            setLoading(false);
-        }
-    }, [authLoading]);
-
-    useEffect(() => {
-        if (!authLoading) fetchHorarios(1);
-    }, [fetchHorarios, authLoading]);
-
-    // Listener para cambios en filtros (Selects)
-    useEffect(() => {
-        if (authLoading) return;
-        const hasChanged = 
-            filters.anio_academico_id !== filtersRef.current.anio_academico_id || 
-            filters.docente_id !== filtersRef.current.docente_id ||
-            filters.grado_id !== filtersRef.current.grado_id ||
-            filters.seccion_id !== filtersRef.current.seccion_id;
-
-        if (hasChanged) {
-            filtersRef.current = { ...filters };
-            fetchHorarios(1); 
-        }
-    }, [filters, fetchHorarios, authLoading]);
-
-    const handleConfirmDelete = async () => {
-        try {
-            await destroy(deleteModal.id);
-            setAlert({ type: 'success', message: 'Horario eliminado correctamente.' });
-            fetchHorarios(paginationInfo.currentPage);
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al eliminar'));
-        } finally {
-            setDeleteModal({ isOpen: false, id: null, descripcion: '' });
-        }
-    };
-
-    // --- LÓGICA AUXILIAR ---
-    const showViewScheduleButton = useCallback(() => {
-        if (role === 'alumno' || role === 'docente') return true;
-        if (filters.seccion_id) return true;
-        return false;
-    }, [role, filters.seccion_id]);
-
-    const getModalSeccionId = () => {
-        return role === 'alumno' ? user.alumno_data?.seccion_id : (filters.seccion_id || null);
-    };
-
-    // --- COLUMNAS DE LA TABLA ---
     const columns = useMemo(() => {
         const cols = [
             {
@@ -157,9 +102,8 @@ const Index = () => {
             });
         }
         return cols;
-    }, [role]);
+    }, [role, setDeleteModal]);
 
-    // --- CONFIGURACIÓN DE FILTROS (BOTÓN INCLUIDO) ---
     const filterConfig = useMemo(() => {
         const config = [
             { 
@@ -171,7 +115,6 @@ const Index = () => {
         ];
 
         if (role !== 'alumno') {
-            // Filtros comunes para Admin y Docente
             config.push(
                 { 
                     name: 'grado_id', type: 'custom', colSpan: 'col-span-6 md:col-span-2',
@@ -188,7 +131,6 @@ const Index = () => {
                 }
             );
 
-            // Filtros EXCLUSIVOS del Administrador
             if (role === 'admin') {
                 config.push(
                     { 
@@ -222,7 +164,7 @@ const Index = () => {
         }
 
         return config;
-    }, [filters, role, showViewScheduleButton]);
+    }, [filters, setFilters, role, showViewScheduleButton, setShowHorarioModal]);
 
     return (
         <div className="container mx-auto p-6">
@@ -241,17 +183,11 @@ const Index = () => {
                 loading={loading} 
                 filterConfig={filterConfig}
                 filters={filters}
-                onFilterChange={(n, v) => setFilters(p => ({...p, [n]: v}))}
-                onFilterSubmit={() => { filtersRef.current = filters; fetchHorarios(1); }}
-                onFilterClear={() => { 
-                    const c = { anio_academico_id: '', grado_id: '', seccion_id: '', seccionNombre: '', docente_id: '' , search: '' }; 
-                    setFilters(c); 
-                    filtersRef.current = c; 
-                    fetchHorarios(1); 
-                }}
+                onFilterChange={handleFilterChange}
+                onFilterSubmit={handleFilterSubmit}
+                onFilterClear={handleFilterClear}
                 pagination={{
-                    currentPage: paginationInfo.currentPage,
-                    totalPages: paginationInfo.totalPages,
+                    ...paginationInfo,
                     onPageChange: fetchHorarios
                 }}
             />
@@ -269,7 +205,7 @@ const Index = () => {
                     title="¿Eliminar Horario?" 
                     message={`Se eliminará la clase de los días ${deleteModal.descripcion}.`}
                     onConfirm={handleConfirmDelete} 
-                    onCancel={() => setDeleteModal({ isOpen: false, id: null })} 
+                    onCancel={() => setDeleteModal({ isOpen: false, id: null, descripcion: '' })} 
                 />
             )}
         </div>

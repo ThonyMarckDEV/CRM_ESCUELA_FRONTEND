@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { index, destroy, getTicket } from 'services/pagoService';
+import React, { useMemo } from 'react';
+import { useIndex } from './hooks/useIndex';
+
 import Table from 'components/Shared/Tables/Table';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import PdfModal from 'components/Shared/Modals/PdfModal';
-import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+
 import { 
     BanknotesIcon, 
     TrashIcon, 
@@ -15,91 +16,27 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Index = () => {
-    const [loading, setLoading] = useState(true);
-    const [pagos, setPagos] = useState([]);
-    const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1 });
-    
-    const [filters, setFilters] = useState({ search: '', estado: '' });
-    const filtersRef = useRef(filters);
-    const [alert, setAlert] = useState(null);
-    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
-
-    const [pdfUrl, setPdfUrl] = useState(null);
-    const [showPdfModal, setShowPdfModal] = useState(false);
-    const [loadingTicket, setLoadingTicket] = useState(false);
-
-    const fetchPagos = useCallback(async (page = 1) => {
-        setLoading(true);
-        try {
-            const response = await index(page, filtersRef.current);
-            setPagos(response.data || []);
-            setPaginationInfo({
-                currentPage: response.current_page,
-                last_page: response.last_page,
-                totalPages: response.last_page,
-            });
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al cargar pagos'));
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { fetchPagos(1); }, [fetchPagos]);
-
-    const handlePrintTicket = async (id) => {
-        setLoadingTicket(true);
-        try {
-            const blob = await getTicket(id);
-            const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-            setPdfUrl(url);
-            setShowPdfModal(true);
-        } catch (error) {
-            setAlert(handleApiError(error, 'Error al generar ticket'));
-        } finally {
-            setLoadingTicket(false);
-        }
-    };
-
-    const handleClosePdf = () => {
-        setShowPdfModal(false);
-        if (pdfUrl) window.URL.revokeObjectURL(pdfUrl);
-        setPdfUrl(null);
-    };
-
-    const handleConfirmAnular = async () => {
-        try {
-            await destroy(deleteModal.id);
-            setAlert({ type: 'success', message: 'Pago anulado correctamente.' });
-            fetchPagos(paginationInfo.currentPage);
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al anular'));
-        } finally {
-            setDeleteModal({ isOpen: false, id: null });
-        }
-    };
-
-    const isPaymentLocked = (dateString) => {
-        if (!dateString) return false;
-        
-        try {
-            const [fecha, hora] = dateString.split(' '); // Separar fecha y hora
-            const [dia, mes, anio] = fecha.split('/');   // Separar dia, mes, año
-            const [horas, minutos] = hora.split(':');    // Separar horas, minutos
-
-            const paymentDate = new Date(anio, mes - 1, dia, horas, minutos);
-            const now = new Date();
-
-            // Calcular diferencia
-            const diffInMs = now - paymentDate;
-            const diffInHours = diffInMs / (1000 * 60 * 60);
-            
-            return diffInHours > 24;
-        } catch (e) {
-            console.error("Error al procesar fecha:", dateString);
-            return false;
-        }
-    };
+    const {
+        loading,
+        pagos,
+        paginationInfo,
+        filters,
+        alert,
+        setAlert,
+        deleteModal,
+        setDeleteModal,
+        pdfUrl,
+        showPdfModal,
+        loadingTicket,
+        fetchPagos,
+        handlePrintTicket,
+        handleClosePdf,
+        handleConfirmAnular,
+        isPaymentLocked,
+        handleFilterChange,
+        handleFilterSubmit,
+        handleFilterClear
+    } = useIndex();
 
     const columns = useMemo(() => [
         {
@@ -161,7 +98,6 @@ const Index = () => {
             header: 'Acciones',
             render: (row) => !row.es_anulado && (
                 <div className="flex gap-2 items-center">
-                    {/* BOTÓN REIMPRIMIR  */}
                     <button 
                         onClick={() => handlePrintTicket(row.id)}
                         disabled={loadingTicket}
@@ -171,9 +107,7 @@ const Index = () => {
                         <PrinterIcon className="w-5 h-5" />
                     </button>
 
-                    {/* LÓGICA CONDICIONAL: CANDADO vs BASURA */}
                     {isPaymentLocked(row.fecha_pago) ? (
-                        // MODO BLOQUEADO (Más de 24 horas)
                         <div 
                             className="p-1.5 text-gray-300 cursor-not-allowed"
                             title="Bloqueado: El pago tiene más de 24 horas y no puede ser anulado."
@@ -181,7 +115,6 @@ const Index = () => {
                             <LockClosedIcon className="w-5 h-5" />
                         </div>
                     ) : (
-                        // MODO PERMITIDO (Menos de 24 horas)
                         <button 
                             onClick={() => setDeleteModal({ isOpen: true, id: row.id })}
                             className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -193,9 +126,11 @@ const Index = () => {
                 </div>
             )
         }
-    ], [loadingTicket]);
+    ], [loadingTicket, handlePrintTicket, isPaymentLocked, setDeleteModal]);
 
-    const filterConfig = [{ name: 'search', type: 'text', label: 'Buscar', placeholder: 'Alumno, Operación...', colSpan: 'md:col-span-12' }];
+    const filterConfig = useMemo(() => [
+        { name: 'search', type: 'text', label: 'Buscar', placeholder: 'Alumno, Operación...', colSpan: 'md:col-span-12' }
+    ], []);
 
     return (
         <div className="container mx-auto p-6">
@@ -215,10 +150,14 @@ const Index = () => {
                 loading={loading} 
                 filterConfig={filterConfig}
                 filters={filters}
-                onFilterChange={(n, v) => setFilters(p => ({...p, [n]: v}))}
-                onFilterSubmit={() => { filtersRef.current = filters; fetchPagos(1); }}
-                onFilterClear={() => { const c = {search:'', estado: ''}; setFilters(c); filtersRef.current = c; fetchPagos(1); }}
-                pagination={{ currentPage: paginationInfo.currentPage, totalPages: paginationInfo.totalPages, onPageChange: fetchPagos }}
+                onFilterChange={handleFilterChange}
+                onFilterSubmit={handleFilterSubmit}
+                onFilterClear={handleFilterClear}
+                pagination={{ 
+                    currentPage: paginationInfo.currentPage, 
+                    totalPages: paginationInfo.totalPages, 
+                    onPageChange: fetchPagos 
+                }}
             />
 
             {deleteModal.isOpen && (
