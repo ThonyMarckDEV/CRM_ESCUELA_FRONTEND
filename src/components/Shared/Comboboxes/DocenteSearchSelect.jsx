@@ -42,7 +42,7 @@ const DocenteSearchSelect = ({ form, setForm, disabled, isFilter = false }) => {
         try {
             const response = await index(1, { 
                 search: searchTerm, 
-                estado: 'Activo',
+                estado: 1,
                 rol_id: 4
             });
             const lista = response.data || [];
