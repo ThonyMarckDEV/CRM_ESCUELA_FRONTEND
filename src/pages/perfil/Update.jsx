@@ -49,9 +49,10 @@ const Update = () => {
                                     <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Estado Civil</label>
                                     <select name="estadoCivil" value={formData.estadoCivil} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-black outline-none">
                                         <option value="">Seleccione...</option>
-                                        <option value="Soltero(a)">Soltero(a)</option>
-                                        <option value="Casado(a)">Casado(a)</option>
-                                        <option value="Viudo(a)">Viudo(a)</option>
+                                        <option value="Soltero">Soltero(a)</option>
+                                        <option value="Casado">Casado(a)</option>
+                                        <option value="Viudo">Viudo(a)</option>
+                                        <option value="Divorciado">Divorciado(a)</option>
                                     </select>
                                 </div>
                             </>

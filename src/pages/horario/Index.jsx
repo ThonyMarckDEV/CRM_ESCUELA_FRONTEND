@@ -76,7 +76,8 @@ const Index = () => {
                             <span className="text-sm font-bold text-slate-700">{row.curso_nombre}</span>
                         </div>
                         <div className="flex flex-col pl-6">
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wide">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                                <span className="bg-slate-200 text-slate-600 px-1.5 rounded">{row.nivel_nombre}</span>
                                 {row.grado_nombre} | <strong className="text-slate-600">"{row.seccion_nombre}"</strong>
                             </span>
                         </div>

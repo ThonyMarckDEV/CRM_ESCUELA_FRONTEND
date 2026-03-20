@@ -1,8 +1,8 @@
-import React, { useRef } from 'react'; // Importamos useRef
+import React, { useRef } from 'react';
 import { useIndex } from './hooks/useIndex';
 import { Link } from 'react-router-dom';
 import QRCode from 'react-qr-code';
-import { toPng } from 'html-to-image'; // Importamos el conversor
+import { toPng } from 'html-to-image';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -11,24 +11,22 @@ import {
     IdentificationIcon, 
     PencilSquareIcon, 
     QrCodeIcon, 
-    ArrowDownTrayIcon // Icono de descarga
+    ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 
 const Index = () => {
     const { loading, perfil, alert, setAlert, qrEncriptado } = useIndex();
-    const carnetRef = useRef(null); // Referencia para el área del carnet
+    const carnetRef = useRef(null);
 
     if (loading) return <LoadingScreen />;
     if (!perfil) return null;
 
     const datos = perfil.datos;
 
-    // Función para procesar la imagen y descargar
     const downloadCarnet = () => {
         if (carnetRef.current === null) return;
 
-        // Convertimos el div a PNG
-        toPng(carnetRef.current, { cacheBust: true, pixelRatio: 2 }) // pixelRatio 2 para mejor calidad
+        toPng(carnetRef.current, { cacheBust: true, pixelRatio: 2 })
             .then((dataUrl) => {
                 const link = document.createElement('a');
                 link.download = `Carnet-${datos.dni}.png`;
@@ -78,6 +76,16 @@ const Index = () => {
                             <p className="font-medium text-slate-800">{datos.dni}</p>
                         </div>
                         
+                        {/* NUEVOS CAMPOS */}
+                        <div>
+                            <p className="text-xs text-slate-500 font-bold uppercase mb-1">Fecha de Nacimiento</p>
+                            <p className="font-medium text-slate-800">{datos.fechaNacimiento || 'No registrada'}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-slate-500 font-bold uppercase mb-1">Sexo</p>
+                            <p className="font-medium text-slate-800">{datos.sexo || 'No registrado'}</p>
+                        </div>
+
                         {perfil.tipo === 'alumno' && (
                             <div>
                                 <p className="text-xs text-slate-500 font-bold uppercase mb-1">Código Estudiante</p>
@@ -97,6 +105,13 @@ const Index = () => {
                             </p>
                         </div>
                         
+                        {perfil.tipo === 'empleado' && (
+                            <div>
+                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Estado Civil</p>
+                                <p className="font-medium text-slate-800">{datos.estadoCivil || 'No registrado'}</p>
+                            </div>
+                        )}
+                        
                         {perfil.tipo === 'alumno' && (
                             <div>
                                 <p className="text-xs text-slate-500 font-bold uppercase mb-1">Apoderado</p>
@@ -109,7 +124,6 @@ const Index = () => {
                 {/* 2. CARNET DIGITAL CON DESCARGA */}
                 {perfil.tipo === 'alumno' && qrEncriptado && (
                     <div className="lg:w-1/3 flex flex-col gap-4">
-                        {/* Contenedor Ref: Esto es lo que se descargará */}
                         <div 
                             ref={carnetRef}
                             className="bg-black text-white p-8 rounded-2xl shadow-xl flex flex-col items-center justify-center text-center relative overflow-hidden"
@@ -131,7 +145,6 @@ const Index = () => {
                             </div>
                         </div>
 
-                        {/* Botón de descarga fuera del carnetRef para que no salga en la foto */}
                         <button
                             onClick={downloadCarnet}
                             className="w-full bg-zinc-800 text-white py-3 rounded-xl font-black uppercase text-xs flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg active:scale-95"
