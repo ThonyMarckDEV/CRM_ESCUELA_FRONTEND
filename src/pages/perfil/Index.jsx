@@ -1,8 +1,7 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { useIndex } from './hooks/useIndex';
 import { Link } from 'react-router-dom';
 import QRCode from 'react-qr-code';
-import { toPng } from 'html-to-image';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -11,32 +10,26 @@ import {
     IdentificationIcon, 
     PencilSquareIcon, 
     QrCodeIcon, 
-    ArrowDownTrayIcon
+    ArrowDownTrayIcon,
+    AcademicCapIcon
 } from '@heroicons/react/24/outline';
 
 const Index = () => {
-    const { loading, perfil, alert, setAlert, qrEncriptado } = useIndex();
-    const carnetRef = useRef(null);
+    const { 
+        loading, 
+        perfil, 
+        alert, 
+        setAlert, 
+        qrEncriptado, 
+        carnetRef, 
+        downloadCarnet 
+    } = useIndex();
 
     if (loading) return <LoadingScreen />;
     if (!perfil) return null;
 
     const datos = perfil.datos;
-
-    const downloadCarnet = () => {
-        if (carnetRef.current === null) return;
-
-        toPng(carnetRef.current, { cacheBust: true, pixelRatio: 2 })
-            .then((dataUrl) => {
-                const link = document.createElement('a');
-                link.download = `Carnet-${datos.dni}.png`;
-                link.href = dataUrl;
-                link.click();
-            })
-            .catch((err) => {
-                console.error('Error al generar la imagen', err);
-            });
-    };
+    const matricula = perfil.matricula; 
 
     return (
         <div className="container mx-auto p-6">
@@ -52,76 +45,120 @@ const Index = () => {
 
             <div className="flex flex-col lg:flex-row gap-6">
                 
-                {/* 1. INFORMACIÓN PERSONAL */}
-                <div className="flex-1 bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
-                    <div className="flex justify-between items-center border-b pb-4 mb-6">
-                        <h3 className="text-lg font-black text-slate-800 uppercase flex items-center gap-2">
-                            <IdentificationIcon className="w-6 h-6 text-black" />
-                            Datos Personales
-                        </h3>
-                        <Link to="/perfil/editar" className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-bold">
-                            <PencilSquareIcon className="w-4 h-4" /> Editar
-                        </Link>
+                {/* COLUMNA IZQUIERDA: Datos y Matrícula */}
+                <div className="flex-1 flex flex-col gap-6">
+                    
+                    {/* 1. INFORMACIÓN PERSONAL */}
+                    <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+                        <div className="flex justify-between items-center border-b pb-4 mb-6">
+                            <h3 className="text-lg font-black text-slate-800 uppercase flex items-center gap-2">
+                                <IdentificationIcon className="w-6 h-6 text-black" />
+                                Datos Personales
+                            </h3>
+                            <Link to="/perfil/editar" className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-bold">
+                                <PencilSquareIcon className="w-4 h-4" /> Editar
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Nombre Completo</p>
+                                <p className="font-medium text-slate-800 text-lg">
+                                    {datos.nombre} {datos.apellidoPaterno} {datos.apellidoMaterno}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Documento (DNI)</p>
+                                <p className="font-medium text-slate-800">{datos.dni}</p>
+                            </div>
+                            
+                            <div>
+                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Fecha de Nacimiento</p>
+                                <p className="font-medium text-slate-800">{datos.fechaNacimiento || 'No registrada'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Sexo</p>
+                                <p className="font-medium text-slate-800">{datos.sexo || 'No registrado'}</p>
+                            </div>
+
+                            {perfil.tipo === 'alumno' && (
+                                <div>
+                                    <p className="text-xs text-slate-500 font-bold uppercase mb-1">Código Estudiante</p>
+                                    <p className="font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block border border-blue-100">{datos.codigo_estudiante}</p>
+                                </div>
+                            )}
+
+                            <div>
+                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Dirección</p>
+                                <p className="font-medium text-slate-800">{datos.direccion || 'No registrada'}</p>
+                            </div>
+
+                            <div>
+                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Teléfono</p>
+                                <p className="font-medium text-slate-800">
+                                    {perfil.tipo === 'empleado' ? datos.telefono : datos.telefono_apoderado || 'No registrado'}
+                                </p>
+                            </div>
+                            
+                            {perfil.tipo === 'empleado' && (
+                                <div>
+                                    <p className="text-xs text-slate-500 font-bold uppercase mb-1">Estado Civil</p>
+                                    <p className="font-medium text-slate-800">{datos.estadoCivil || 'No registrado'}</p>
+                                </div>
+                            )}
+                            
+                            {perfil.tipo === 'alumno' && (
+                                <div>
+                                    <p className="text-xs text-slate-500 font-bold uppercase mb-1">Apoderado</p>
+                                    <p className="font-medium text-slate-800">{datos.nombre_apoderado || 'No registrado'}</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <p className="text-xs text-slate-500 font-bold uppercase mb-1">Nombre Completo</p>
-                            <p className="font-medium text-slate-800 text-lg">
-                                {datos.nombre} {datos.apellidoPaterno} {datos.apellidoMaterno}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-slate-500 font-bold uppercase mb-1">Documento (DNI)</p>
-                            <p className="font-medium text-slate-800">{datos.dni}</p>
-                        </div>
-                        
-                        {/* NUEVOS CAMPOS */}
-                        <div>
-                            <p className="text-xs text-slate-500 font-bold uppercase mb-1">Fecha de Nacimiento</p>
-                            <p className="font-medium text-slate-800">{datos.fechaNacimiento || 'No registrada'}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-slate-500 font-bold uppercase mb-1">Sexo</p>
-                            <p className="font-medium text-slate-800">{datos.sexo || 'No registrado'}</p>
-                        </div>
-
-                        {perfil.tipo === 'alumno' && (
-                            <div>
-                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Código Estudiante</p>
-                                <p className="font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block">{datos.codigo_estudiante}</p>
+                    {/* 2. INFORMACIÓN ACADÉMICA (Solo si es alumno y tiene matrícula) */}
+                    {perfil.tipo === 'alumno' && matricula && (
+                        <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200">
+                            <h3 className="text-lg font-black text-slate-800 uppercase flex items-center gap-2 border-b border-slate-200 pb-4 mb-6">
+                                <AcademicCapIcon className="w-6 h-6 text-black" />
+                                Información Académica Actual
+                            </h3>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Año Escolar</p>
+                                    <p className="font-black text-slate-700">{matricula.anio}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Nivel</p>
+                                    <p className="font-black text-slate-700">{matricula.nivel}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Grado y Sección</p>
+                                    <p className="font-black text-blue-700">{matricula.grado} "{matricula.seccion}"</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Estado</p>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                                        matricula.estado_code === 1 ? 'bg-green-100 text-green-700 border-green-200' :
+                                        matricula.estado_code === 0 ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                                        'bg-red-100 text-red-700 border-red-200'
+                                    }`}>
+                                        {matricula.estado}
+                                    </span>
+                                </div>
                             </div>
-                        )}
-
-                        <div>
-                            <p className="text-xs text-slate-500 font-bold uppercase mb-1">Dirección</p>
-                            <p className="font-medium text-slate-800">{datos.direccion || 'No registrada'}</p>
                         </div>
-
-                        <div>
-                            <p className="text-xs text-slate-500 font-bold uppercase mb-1">Teléfono</p>
-                            <p className="font-medium text-slate-800">
-                                {perfil.tipo === 'empleado' ? datos.telefono : datos.telefono_apoderado || 'No registrado'}
-                            </p>
+                    )}
+                    
+                    {perfil.tipo === 'alumno' && !matricula && (
+                        <div className="bg-orange-50 p-6 rounded-xl border border-orange-100 text-center">
+                            <p className="text-sm font-bold text-orange-800">No se encontró una matrícula activa para el año en curso.</p>
                         </div>
-                        
-                        {perfil.tipo === 'empleado' && (
-                            <div>
-                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Estado Civil</p>
-                                <p className="font-medium text-slate-800">{datos.estadoCivil || 'No registrado'}</p>
-                            </div>
-                        )}
-                        
-                        {perfil.tipo === 'alumno' && (
-                            <div>
-                                <p className="text-xs text-slate-500 font-bold uppercase mb-1">Apoderado</p>
-                                <p className="font-medium text-slate-800">{datos.nombre_apoderado || 'No registrado'}</p>
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </div>
 
-                {/* 2. CARNET DIGITAL CON DESCARGA */}
+                {/* COLUMNA DERECHA: CARNET DIGITAL CON DESCARGA */}
                 {perfil.tipo === 'alumno' && qrEncriptado && (
                     <div className="lg:w-1/3 flex flex-col gap-4">
                         <div 
