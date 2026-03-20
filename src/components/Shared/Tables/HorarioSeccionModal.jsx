@@ -53,37 +53,62 @@ const HorarioSeccionModal = ({ seccionId, seccionNombre, onClose }) => {
     }, [loadHorario]);
 
     const renderDia = (diaId) => {
+        // 1. Filtramos y ordenamos las clases por hora de inicio
         const clasesDia = horarioData
             .filter(h => parseInt(h.dia_semana) === diaId)
             .sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio));
         
         if (clasesDia.length === 0) return <div className="text-xs text-gray-300 text-center py-4 italic">Libre</div>;
 
-        return clasesDia.map(clase => (
-            <div key={clase.id} className="mb-2 p-2 bg-blue-50 border-l-4 border-blue-500 rounded shadow-sm text-xs">
-                <div className="font-bold text-slate-700 leading-tight">{clase.curso}</div>
-                
-                {/* MOSTRAR GRADO Y SECCIÓN SI ES DOCENTE */}
-                {role === 'docente' && (
-                    <div className="mt-1 text-[10px] font-black text-blue-600 uppercase bg-blue-100/50 px-1.5 py-0.5 rounded w-fit">
-                        {clase.grado_nombre} - "{clase.seccion_nombre}"
-                    </div>
-                )}
+        const elementosRender = [];
 
-                <div className="text-slate-500 mt-1 flex justify-between font-medium">
-                    <span>{clase.hora_inicio} - {clase.hora_fin}</span>
-                </div>
-                
-                <div className="text-[10px] text-slate-400 mt-1 truncate border-t border-blue-100 pt-1">
-                    {clase.docente}
-                </div>
-                {clase.aula && clase.aula !== '-' && (
-                    <div className="text-[9px] text-indigo-500 mt-0.5 flex items-center gap-1">
-                        <span>📍</span> {clase.aula}
+        // 2. Iteramos para renderizar y buscar espacios (Recreos)
+        clasesDia.forEach((clase, index) => {
+            // A) Agregamos la clase actual
+            elementosRender.push(
+                <div key={`clase-${clase.id}`} className="mb-2 p-2 bg-blue-50 border-l-4 border-blue-500 rounded shadow-sm text-xs">
+                    <div className="font-bold text-slate-700 leading-tight">{clase.curso}</div>
+                    
+                    {role === 'docente' && (
+                        <div className="mt-1 text-[10px] font-black text-blue-600 uppercase bg-blue-100/50 px-1.5 py-0.5 rounded w-fit">
+                            {clase.grado_nombre} - "{clase.seccion_nombre}"
+                        </div>
+                    )}
+
+                    <div className="text-slate-500 mt-1 flex justify-between font-medium">
+                        <span>{clase.hora_inicio.substring(0, 5)} - {clase.hora_fin.substring(0, 5)}</span>
                     </div>
-                )}
-            </div>
-        ));
+                    
+                    <div className="text-[10px] text-slate-400 mt-1 truncate border-t border-blue-100 pt-1">
+                        {clase.docente}
+                    </div>
+                    {clase.aula && clase.aula !== '-' && (
+                        <div className="text-[9px] text-indigo-500 mt-0.5 flex items-center gap-1">
+                            <span>📍</span> {clase.aula}
+                        </div>
+                    )}
+                </div>
+            );
+
+            // B) Verificamos si hay un hueco con la SIGUIENTE clase
+            if (index < clasesDia.length - 1) {
+                const siguienteClase = clasesDia[index + 1];
+                
+                // Si la hora de fin de la actual es menor a la de inicio de la siguiente
+                if (clase.hora_fin < siguienteClase.hora_inicio) {
+                    elementosRender.push(
+                        <div key={`recreo-${clase.id}`} className="mb-2 p-2 bg-orange-50 border-l-4 border-orange-400 rounded shadow-sm text-xs flex flex-col items-center justify-center">
+                            <span className="font-black text-orange-600 uppercase tracking-widest text-[10px]">Recreo</span>
+                            <span className="text-orange-500/80 font-bold text-[10px] mt-0.5">
+                                {clase.hora_fin.substring(0, 5)} - {siguienteClase.hora_inicio.substring(0, 5)}
+                            </span>
+                        </div>
+                    );
+                }
+            }
+        });
+
+        return elementosRender;
     };
 
     return (
